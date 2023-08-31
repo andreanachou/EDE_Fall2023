@@ -1,6 +1,6 @@
 ---
 title: "Assignment 1: Introduction"
-author: "Student Name"
+author: "Andreana Chou"
 output: pdf_document
 geometry: margin=2.54cm
 ---
@@ -24,6 +24,9 @@ This exercise accompanies the introductory material in Environmental Data Analyt
 Now, run this code cell the same way. This will install "tinytex" -- a helper app that allows you to knit your markdown documents into professional quality PDFs.
 ```{r install tiny tex, eval=FALSE, include=FALSE}
 #install tinytext
+install.packages("tinytex")
+
+```
 tinytex::install_tinytex()
 ```
 
@@ -40,15 +43,17 @@ Enter answers to the questions just below the >Answer: prompt.
 1. What are your previous experiences with data analytics, R, and Git? Include both formal and informal training.
 
 > Answer: 
+I took a statistics class in undergrad that revolved around R.
 
 2. Are there any components of the course about which you feel confident?
 
 > Answer: 
+Starting out with R, I have some basic experience.
 
 3. Are there any components of the course about which you feel apprehensive?
 
 > Answer: 
-
+Feeling apprehensive about most things because they will be new topics.
 
 ## 3) GitHub
 
