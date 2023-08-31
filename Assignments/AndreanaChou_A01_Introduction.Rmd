@@ -22,12 +22,10 @@ This exercise accompanies the introductory material in Environmental Data Analyt
 
 ### Install TinyTex
 Now, run this code cell the same way. This will install "tinytex" -- a helper app that allows you to knit your markdown documents into professional quality PDFs.
+
 ```{r install tiny tex, eval=FALSE, include=FALSE}
 #install tinytext
 install.packages("tinytex")
-
-```
-tinytex::install_tinytex()
 ```
 
 ### Set your default knit directory
@@ -59,7 +57,7 @@ Feeling apprehensive about most things because they will be new topics.
 
 Provide a link below to your forked course repository in GitHub. Make sure you have pulled all recent changes from the course repository and that you have updated your course README file, committed those changes, and pushed them to your GitHub account. 
 
-> Answer: 
+> Answer: https://github.com/andreanachou/EDE_Fall2023.git
 
 ## 4) Knitting
 When you have completed this document, click the `knit` button.This should produce a PDF copy of your markdown document. Submit this PDF to Sakai. 
