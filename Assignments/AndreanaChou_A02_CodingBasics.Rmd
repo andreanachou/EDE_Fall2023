@@ -34,7 +34,7 @@ This exercise accompanies the lessons in Environmental Data Analytics on coding 
 #1. 
 sequence_30 <- seq(1, 30, 3)   
 sequence_30
-#used sequence function
+#used sequence function, assigned to object
 
 #2. 
 mean_sequence_30 <- mean(sequence_30)    
@@ -65,7 +65,7 @@ answer_3
 
 a_vector <- c("Anna", "Steve", "Emily", "Jason")   #a_vector is a character vector
 b_vector <- c(93, 49, 86, 52)    #b_vector is a number vector
-c_vector <- c("TRUE", "FALSE", "TRUE", "TRUE")    #c_vector is a character vector
+c_vector <- c(b_vector >=50)    #c_vector is a logical vector
 
 #7.
 
@@ -91,21 +91,15 @@ test_scores
 
 ```{r basics 3}
 
-given_score <- ifelse(b_vector >= 50, print("TRUE"), print("FALSE"))
+#ifelse: created a function with ifelse statement using vector of the test scores, assigned to object that could act as a function with numerical inputs
 
-given_score2 <- function(test_scores) {ifelse(b_vector >= 50, print("TRUE"), print("FALSE"))}
+passing_grade1 <- function(b_vector) {print(ifelse(b_vector >= 50, TRUE, FALSE))}
 
-given_score3 <- function(test_scores) {if("score" >= 50) {print("TRUE")} else {print("FALSE")}}
-```
 
-```{r}
-passing_grade <- function(test_scores) { if("score" >= 50) { print("TRUE") } else { print("FALSE") } }
+#if/else: created a function with if/else statement using a vector of the test score, assigned to object that could act as a function with numerical inputs
 
-Anna <- passing_grade("Anna")
-Steve <- passing_grade("Steve")
-
-passing_grade2 <- function(test_scores) { ifelse("score" >= 50, "TRUE", "FALSE") }
-
+passing_grade2 <- function(b_vector) {print(if(b_vector >= 50) {TRUE} else {FALSE})}
+  
 ```
 
 12. QUESTION: Which option of `if` and `else` vs. `ifelse` worked? Why?
