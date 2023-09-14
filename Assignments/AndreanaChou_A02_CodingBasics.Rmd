@@ -61,6 +61,21 @@ answer_3
 8.  Label the columns of your data frame with informative titles.
 
 ```{r basics 2}
+#5.and #6. 
+
+a_vector <- c("Anna", "Steve", "Emily", "Jason")   #a_vector is a character vector
+b_vector <- c(93, 49, 86, 52)    #b_vector is a number vector
+c_vector <- c("TRUE", "FALSE", "TRUE", "TRUE")    #c_vector is a character vector
+
+#7.
+
+test_scores <- data.frame(a_vector, b_vector, c_vector)
+test_scores
+
+#8.
+
+test_scores <- data.frame("names"=a_vector, "score"=b_vector, "pass"=c_vector)
+test_scores
 
 ```
 
