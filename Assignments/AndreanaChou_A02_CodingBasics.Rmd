@@ -91,17 +91,21 @@ test_scores
 
 ```{r basics 3}
 
-#ifelse: created a function with ifelse statement using vector of the test scores, assigned to object that could act as a function with numerical inputs
+#ifelse: created a function with ifelse statement using vector of the test scores
+#assigned to object that could act as a function with numerical inputs
 
 passing_grade1 <- function(b_vector) {print(ifelse(b_vector >= 50, TRUE, FALSE))}
+passing_grade1_vector <- passing_grade1(b_vector)   #using a vector input into ifelse
+passing_grade1_40 <- passing_grade1(40)             #using a numerical input into ifelse
 
-
-#if/else: created a function with if/else statement using a vector of the test score, assigned to object that could act as a function with numerical inputs
+#if/else: created a function with if/else statement using a vector of the test score
+#assigned to object that could act as a function with numerical inputs
 
 passing_grade2 <- function(b_vector) {print(if(b_vector >= 50) {TRUE} else {FALSE})}
-  
+                                                    #a vector input does not work
+passing_grade2_40 <- passing_grade2(40)             #using a numerical input into if/else
 ```
 
 12. QUESTION: Which option of `if` and `else` vs. `ifelse` worked? Why?
 
-> Answer: 
+> Answer: While both if/else and ifelse worked with numerical inputs, ifelse was the option that worked with vector inputs. This is because the if/else function can only interpret one value at a time. When if/else is given a vector, or multiple entries, it is unable to provide an output as to whether the student passed or failed. 
