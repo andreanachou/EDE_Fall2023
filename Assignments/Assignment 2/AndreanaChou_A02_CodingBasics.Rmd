@@ -98,8 +98,12 @@ passing_grade1 <- function(b_vector) {print(ifelse(b_vector >= 50, TRUE, FALSE))
 passing_grade1_vector <- passing_grade1(b_vector)   #using a vector input into ifelse
 passing_grade1_40 <- passing_grade1(40)             #using a numerical input into ifelse
 
+<<<<<<< HEAD:Assignments/Assignment 2/AndreanaChou_A02_CodingBasics.Rmd
 #if/else: created a function with if/else statement using a vector of the test score
 #assigned to object that could act as a function with numerical inputs
+=======
+#if/else: created a function with if/else statement using a vector of the test score, assigned to object that could act as a function with numerical inputs
+>>>>>>> e81c7f75179c79090d9652ce03852cf0e2fdcf0d:Assignments/AndreanaChou_A02_CodingBasics.Rmd
 
 passing_grade2 <- function(b_vector) {print(if(b_vector >= 50) {TRUE} else {FALSE})}
                                                     #a vector input does not work
