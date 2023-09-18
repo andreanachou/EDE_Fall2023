@@ -83,36 +83,45 @@ dataframe1$ID
 
 Question: How do the different types of data appear in the Environment tab?
 
-> Answer:
+> Answer: Matrices and dataframes show up as data, while vectors and single-value variables show up as values. 
 
 Question: In the R chunk below, write "dataframe1\$". Press `tab` after you type the dollar sign. What happens?
 
-> Answer:
+> Answer: R will suggest all the columns in the dataframe1
 
 ### Coding challenge
 
 Find a ten-day forecast of temperatures (Fahrenheit) for Durham, North Carolina. Create two vectors, one representing the high temperature on each of the ten days and one representing the low.
 
 ```{r DataExercise-1a}
+high_f <- c(81, 83, 83, 84, 78, 71, 79, 82, 85, 84)
+low_f <- c(81, 83, 83, 84, 78, 71, 79, 82, 85, 84)
 
 ```
 
 Now, create two additional vectors that include the ten-day forecast for the high and low temperatures in Celsius. Use a function to create the two new vectors from your existing ones in Fahrenheit.
 
 ```{r DataExercise-1b}
-
+high_c <- (high_f - 32)*(5/9)
+low_c <- (low_c - 32)*(5/9)
 ```
 
 Combine your four vectors into a data frame and add informative column names.
 
 ```{r DataExercise-1c}
+durham_forecast <- data.frame(high_f, low_f, high_c, low_c)
+#or use data.frame("High (F)" = high_f, "Low (F)" = low_f, ...)
 
+names(durham_forecast) <- c("High (F)", "Low (F)", "High (C)", "Low (C)")
+
+view(durham_forecast)
 ```
 
 Use the common functions `summary` and `sd` to obtain basic data summaries of the ten-day forecast. How would you call these functions differently for the entire data frame vs. a single column? Attempt to demonstrate both options below.
 
 ```{r DataExercise-1d}
-
+summary(durham_forecast)
+sd(durham_forecast$`High (F)`)
 ```
 
 ### Date objects
@@ -159,8 +168,8 @@ date_obj_today
 #Ex_3 - on your own...
 str_juneteenth <- "19 June 1865"
 #Since the format is month-day-year we will use function mdy()
-#date_juneteenth <- ()
-#date_juneteenth
+date_juneteenth <- dmy(str_juneteenth)
+date_juneteenth
 ```
 
 ```{r DateExercise2}
