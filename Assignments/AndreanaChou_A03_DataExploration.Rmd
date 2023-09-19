@@ -1,6 +1,6 @@
 ---
 title: "Assignment 3: Data Exploration"
-author: "Student Name"
+author: "Andreana Chou"
 date: "Fall 2023"
 output: pdf_document
 geometry: margin=2.54cm
@@ -32,59 +32,72 @@ This exercise accompanies the lessons in Environmental Data Analytics on Data Ex
 
 1.  Check your working directory, load necessary packages (tidyverse, lubridate), and upload two datasets: the ECOTOX neonicotinoid dataset (ECOTOX_Neonicotinoids_Insects_raw.csv) and the Niwot Ridge NEON dataset for litter and woody debris (NEON_NIWO_Litter_massdata_2018-08_raw.csv). Name these datasets "Neonics" and "Litter", respectively. Be sure to include the subcommand to read strings in as factors.
 
-```{r,  message = FALSE}
+```{r Install packages and data  message = FALSE}
+install.packages(tidyverse)
+library(tidyverse)          #installed and loaded tidyverse
 
+install.packages(lubridate)
+library(lubridate)          #installed and loaded lubridate
+
+Neonics <- read.csv("./Data/Raw/ECOTOX_Neonicotinoids_Insects_raw.csv", stringsAsFactors=TRUE)
+Neonics
+Litter <-read.csv("./Data/Raw/NEON_NIWO_Litter_massdata_2018-08_raw.csv", stringsAsFactors=TRUE)
+Litter
 ```
 
 ## Learn about your system
 
 2.  The neonicotinoid dataset was collected from the Environmental Protection Agency's ECOTOX Knowledgebase, a database for ecotoxicology research. Neonicotinoids are a class of insecticides used widely in agriculture. The dataset that has been pulled includes all studies published on insects. Why might we be interested in the ecotoxicology of neonicotinoids on insects? Feel free to do a brief internet search if you feel you need more background information.
 
-> Answer:
+> Answer: Neonicotinoids can impact the biodiversity and abundance of insects. Insects are pollinators and crucial to agriculture. Insects are also a source of food for key species in the food chain. 
 
 3.  The Niwot Ridge litter and woody debris dataset was collected from the National Ecological Observatory Network, which collectively includes 81 aquatic and terrestrial sites across 20 ecoclimatic domains. 32 of these sites sample forest litter and woody debris, and we will focus on the Niwot Ridge long-term ecological research (LTER) station in Colorado. Why might we be interested in studying litter and woody debris that falls to the ground in forests? Feel free to do a brief internet search if you feel you need more background information.
 
-> Answer:
+> Answer: Woody debris and litter in forests are critical to the ecosystem's carbon and nutrient cycle. It can provide food for organisms, and affect the absorption of water and buildup of sediments in forests.
 
 4.  How is litter and woody debris sampled as part of the NEON network? Read the NEON_Litterfall_UserGuide.pdf document to learn more. List three pieces of salient information about the sampling methods here:
 
 > Answer: 
- 1.
- 2.
- 3. 
+ 1. Litter can be grouped as: leaves, needles, twigs/branches, woody material, seeds, flowers, lichen/mosses, unsorted material
+ 2. Trap placement within plots may be targeted or randomized depending on vegetation
+ 3. Ground traps are sampled once a year, while elevated traps are sampled at varying frequencies depending on vegetation
 
 ## Obtain basic summaries of your data (Neonics)
 
 5.  What are the dimensions of the dataset?
 
 ```{r}
-
+Neonics_dimensions <- dim(Neonics)
+print(Neonics_dimensions)
 ```
 
 6.  Using the `summary` function on the "Effect" column, determine the most common effects that are studied. Why might these effects specifically be of interest?
 
 ```{r}
-
+Effect_summary <- summary(Neonics$Effect)
+print(Effect_summary)
 ```
 
-> Answer:
+> Answer: The effects are of interest to scientists because a chemical may have varying impacts on insects. Some chemicals may alter behavior, or stunt development, or increase mortality, or accumulate in organisms. The summary function counts the number of different observed effects for each categorical group. 
 
 
 7.  Using the `summary` function, determine the six most commonly studied species in the dataset (common name). What do these species have in common, and why might they be of interest over other insects? Feel free to do a brief internet search for more information if needed.[TIP: The `sort()` command can sort the output of the summary command...]
 
 ```{r}
-
+common_species <- summary(Neonics$Species.Common.Name)
+print(sort(common_species))
 ```
 
-> Answer:
+> Answer: The six most commonly studied species are: honey bee, parasitic wasp, Buff Tailed bumblebee, Carniolan honey bee, bumble bee, Italian honeybee. These insects all belong to the order Hymenoptera and are pollinators. Pollinators are likely studied more frequently because of their importance to the agricultural system.
 
 8.  Concentrations are always a numeric value. What is the class of `Conc.1..Author.` column in the dataset, and why is it not numeric?
 
 ```{r}
-
+Conc_1_Author_class <- class(Neonics$Conc.1..Author.)
+print(Conc_1_Author_class)
 ```
 
-> Answer:
+> Answer: The class of 'Conc.1...Author' is factor. It is not numeric because there are several values in Conc.I...Author that have other symbols such as "~" and "/".
 
 ## Explore your data graphically (Neonics)
 

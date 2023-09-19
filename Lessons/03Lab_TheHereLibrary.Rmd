@@ -30,7 +30,7 @@ And thus we introduce the `here` package, designed to streamline this process. W
  - Github repo: https://github.com/jennybc/here_here
  
 ```{r The here package}
-#install.packages('here')
+install.packages('here')
 library(here) #Note this package may conflict with plyr and lubridate
 
 #The command `here()` points to the location containing the ".Rrpoj" file, i.e. 
@@ -47,7 +47,7 @@ setwd(here())
 
 #Arguments in the `here()` command allow easy navigation within subfolders
 filename <- here('Data','Raw','USGS_Site02085000_Flow_Raw.csv')
-print(filename)
+print(filename) 
 the_data <- read.csv(
   file = here('Data','Raw','USGS_Site02085000_Flow_Raw.csv'),
   stringsAsFactors = T
