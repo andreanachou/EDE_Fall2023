@@ -40,9 +40,9 @@ library(tidyverse)          #installed and loaded tidyverse
 library(lubridate)          #installed and loaded lubridate
 
 Neonics <- read.csv("./Data/Raw/ECOTOX_Neonicotinoids_Insects_raw.csv", stringsAsFactors=TRUE)
-Neonics
+
 Litter <-read.csv("./Data/Raw/NEON_NIWO_Litter_massdata_2018-08_raw.csv", stringsAsFactors=TRUE)
-Litter
+
 ```
 
 ## Learn about your system
@@ -130,7 +130,8 @@ Interpret this graph. What are the most common test locations, and do they diffe
 
 ```{r Neonics end points}
 
-Neonics_endpoints <- ggplot(Neonics) + geom_bar(aes(x=Endpoint)) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+Neonics_endpoints <- ggplot(Neonics) + geom_bar(aes(x=Endpoint)) + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 Neonics_endpoints
 ```
 
