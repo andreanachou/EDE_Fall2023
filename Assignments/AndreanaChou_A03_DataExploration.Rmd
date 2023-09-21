@@ -32,7 +32,7 @@ This exercise accompanies the lessons in Environmental Data Analytics on Data Ex
 
 1.  Check your working directory, load necessary packages (tidyverse, lubridate), and upload two datasets: the ECOTOX neonicotinoid dataset (ECOTOX_Neonicotinoids_Insects_raw.csv) and the Niwot Ridge NEON dataset for litter and woody debris (NEON_NIWO_Litter_massdata_2018-08_raw.csv). Name these datasets "Neonics" and "Litter", respectively. Be sure to include the subcommand to read strings in as factors.
 
-```{r install packages and data  message = FALSE}
+```{r install packages and data, message = FALSE}
 install.packages(tidyverse)
 library(tidyverse)          #installed and loaded tidyverse
 
@@ -166,11 +166,11 @@ plot_sum <- summary(Litter$plotID)
 print(plot_sum)
 ```
 
-> Answer: The unique function gives us the total number of unique plots in the Litter dataset. The summary function gives us all the unique plots, but tallies the frequency of samples for each unique plot. 
+> Answer: 12 unique plots were sampled at Niwot Ridge. The unique function gives us the total number of unique plots in the Litter dataset. The summary function gives us all the unique plots, but tallies the frequency of samples for each unique plot. 
 
 14. Create a bar graph of functionalGroup counts. This shows you what type of litter is collected at the Niwot Ridge sites. Notice that litter types are fairly equally distributed across the Niwot Ridge sites.
 
-```{r}
+```{r group categories}
 litter_functional_group <- ggplot(Litter, aes(x=functionalGroup))+geom_bar()
 litter_functional_group
 #set categories as functionalGroup categories
@@ -178,7 +178,7 @@ litter_functional_group
 
 15. Using `geom_boxplot` and `geom_violin`, create a boxplot and a violin plot of dryMass by functionalGroup.
 
-```{r}
+```{r boxplot vs violin plot}
 dryMass_box <- ggplot(Litter) + geom_boxplot(aes(x=functionalGroup, y=dryMass))
 dryMass_box     #set functionalGroup as x-axis, measure of dryMass as y-axis
 
