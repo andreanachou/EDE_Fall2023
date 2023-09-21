@@ -32,7 +32,7 @@ This exercise accompanies the lessons in Environmental Data Analytics on Data Ex
 
 1.  Check your working directory, load necessary packages (tidyverse, lubridate), and upload two datasets: the ECOTOX neonicotinoid dataset (ECOTOX_Neonicotinoids_Insects_raw.csv) and the Niwot Ridge NEON dataset for litter and woody debris (NEON_NIWO_Litter_massdata_2018-08_raw.csv). Name these datasets "Neonics" and "Litter", respectively. Be sure to include the subcommand to read strings in as factors.
 
-```{r Install packages and data  message = FALSE}
+```{r install packages and data  message = FALSE}
 install.packages(tidyverse)
 library(tidyverse)          #installed and loaded tidyverse
 
@@ -66,14 +66,14 @@ Litter
 
 5.  What are the dimensions of the dataset?
 
-```{r}
+```{r Neonics dimensions}
 Neonics_dimensions <- dim(Neonics)
 print(Neonics_dimensions)
 ```
 
 6.  Using the `summary` function on the "Effect" column, determine the most common effects that are studied. Why might these effects specifically be of interest?
 
-```{r}
+```{r Neonics summary}
 Effect_summary <- summary(Neonics$Effect)
 print(Effect_summary)
 ```
@@ -83,7 +83,7 @@ print(Effect_summary)
 
 7.  Using the `summary` function, determine the six most commonly studied species in the dataset (common name). What do these species have in common, and why might they be of interest over other insects? Feel free to do a brief internet search for more information if needed.[TIP: The `sort()` command can sort the output of the summary command...]
 
-```{r}
+```{r Neonics common species}
 common_species <- summary(Neonics$Species.Common.Name)
 print(sort(common_species))
 ```
@@ -92,7 +92,7 @@ print(sort(common_species))
 
 8.  Concentrations are always a numeric value. What is the class of `Conc.1..Author.` column in the dataset, and why is it not numeric?
 
-```{r}
+```{r data class Neonics}
 Conc_1_Author_class <- class(Neonics$Conc.1..Author.)
 print(Conc_1_Author_class)
 ```
@@ -103,62 +103,93 @@ print(Conc_1_Author_class)
 
 9.  Using `geom_freqpoly`, generate a plot of the number of studies conducted by publication year.
 
-```{r}
+```{r Neonics publication year}
+studies_year <- ggplot(Neonics) + geom_freqpoly(aes(x=Publication.Year), bins=40)
 
+#set bins equal to 40 due to range of ~40 years
+
+studies_year
 ```
 
 10. Reproduce the same graph but now add a color aesthetic so that different Test.Location are displayed as different colors.
 
-```{r}
+```{r Neonics test location}
 
+studies_year_location <- ggplot(Neonics) + geom_freqpoly(aes(x=Publication.Year, color=Test.Location), bins=40)
+
+studies_year_location
 ```
 
 Interpret this graph. What are the most common test locations, and do they differ over time?
 
-> Answer:
+> Answer: The most common location is field natural, which occurred around 2010. Overall, field natural remained the dominant location throughout the data collection period. 
 
 11. Create a bar graph of Endpoint counts. What are the two most common end points, and how are they defined? Consult the ECOTOX_CodeAppendix for more information. 
 
 [**TIP**: Add `theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))` to the end of your plot command to rotate and align the X-axis labels...]
 
-```{r}
+```{r Neonics end points}
 
+Neonics_endpoints <- ggplot(Neonics) + geom_bar(aes(x=Endpoint)) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+Neonics_endpoints
 ```
 
-> Answer:
+> Answer: The two most common endpoints are NOEL and LOEL. NOEL stands for no-observable-effects-level at the highest dose/concentration level. LOEL stands for lowest-observable-effect-level at the lowest dose/concentration level. 
 
 ## Explore your data (Litter)
 
 12. Determine the class of collectDate. Is it a date? If not, change to a date and confirm the new class of the variable. Using the `unique` function, determine which dates litter was sampled in August 2018.
 
-```{r}
+```{r Litter date}
+class(Litter$collectDate)     #collectDate is factor
 
+Litter$collectDate <- ymd(Litter$collectDate)
+#used year-month-date function from lubridate package
+
+class(Litter$collectDate)     #collectDate is date
+
+August_dates <- unique(Litter$collectDate)    
+#unique function for collectDate column
+August_dates
 ```
+
+> Answer: Litter was sampled during August 2 and August 30 in 2018.
 
 13. Using the `unique` function, determine how many plots were sampled at Niwot Ridge. How is the information obtained from `unique` different from that obtained from `summary`?
 
-```{r}
+```{r Niwot plots}
+unique_plots <- unique(Litter$plotID)     #unique function for plotID column
+print(unique_plots)      #print list of unique plots
+length(unique_plots)     #length() to count number of characters
 
+plot_sum <- summary(Litter$plotID)
+print(plot_sum)
 ```
 
-> Answer:
+> Answer: The unique function gives us the total number of unique plots in the Litter dataset. The summary function gives us all the unique plots, but tallies the frequency of samples for each unique plot. 
 
 14. Create a bar graph of functionalGroup counts. This shows you what type of litter is collected at the Niwot Ridge sites. Notice that litter types are fairly equally distributed across the Niwot Ridge sites.
 
 ```{r}
-
+litter_functional_group <- ggplot(Litter, aes(x=functionalGroup))+geom_bar()
+litter_functional_group
+#set categories as functionalGroup categories
 ```
 
 15. Using `geom_boxplot` and `geom_violin`, create a boxplot and a violin plot of dryMass by functionalGroup.
 
 ```{r}
+dryMass_box <- ggplot(Litter) + geom_boxplot(aes(x=functionalGroup, y=dryMass))
+dryMass_box     #set functionalGroup as x-axis, measure of dryMass as y-axis
 
+dryMass_violin <- ggplot(Litter) + geom_violin(aes(x=functionalGroup, y=dryMass))
+dryMass_violin  #set functionalGroup as x-axis, measure of dryMass as y-axis
 ```
 
 Why is the boxplot a more effective visualization option than the violin plot in this case?
 
-> Answer:
+> Answer: The violin plot compressed all the dryMass data, making it difficult to interpret the data.The boxplot also more effectively demonstrated the outliers and median of each functional group's dry mass measurements.
 
 What type(s) of litter tend to have the highest biomass at these sites?
 
-> Answer:
+> Answer: Needles (median is the highest out of all other litter groups)
