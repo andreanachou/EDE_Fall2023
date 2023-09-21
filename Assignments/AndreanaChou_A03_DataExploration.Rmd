@@ -33,10 +33,10 @@ This exercise accompanies the lessons in Environmental Data Analytics on Data Ex
 1.  Check your working directory, load necessary packages (tidyverse, lubridate), and upload two datasets: the ECOTOX neonicotinoid dataset (ECOTOX_Neonicotinoids_Insects_raw.csv) and the Niwot Ridge NEON dataset for litter and woody debris (NEON_NIWO_Litter_massdata_2018-08_raw.csv). Name these datasets "Neonics" and "Litter", respectively. Be sure to include the subcommand to read strings in as factors.
 
 ```{r install packages and data, message = FALSE}
-install.packages(tidyverse)
+#install.packages(tidyverse)
 library(tidyverse)          #installed and loaded tidyverse
 
-install.packages(lubridate)
+#install.packages(lubridate)
 library(lubridate)          #installed and loaded lubridate
 
 Neonics <- read.csv("./Data/Raw/ECOTOX_Neonicotinoids_Insects_raw.csv", stringsAsFactors=TRUE)
