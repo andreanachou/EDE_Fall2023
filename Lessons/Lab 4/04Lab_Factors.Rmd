@@ -11,10 +11,10 @@ editor_options:
 ```{r setup}
 knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 #Read packages
-library(tidyverse);library(lubridate); library(here)
+library(tidyverse); library(lubridate); library(here)
 
 #Read in data, don't convert strings to factors
-sites <- read.csv(here('Data/Raw/NWIS_SiteFlowData_NE_Raw.csv'))
+sites <- read.csv(here('Data/Raw/NWIS_SiteFlowData_NE_RAW.csv'))
 dim(sites)
 
 #Convert date column to date object
