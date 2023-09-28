@@ -1,6 +1,6 @@
 ---
 title: "Assignment 4: Data Wrangling"
-author: "Student Name"
+author: "Andreana Chou"
 output: pdf_document
 geometry: margin=2.54cm
 ---
@@ -32,13 +32,30 @@ The completed exercise is due on Thursday, Sept 28th @ 5:00pm.
 
 ```{r setup, message = FALSE}
 #1a 
+library(tidyverse)
+library(lubridate)
+library(here)
 
 #1b 
 
+print(getwd())     #working directory is correct path
+
 #1c 
+
+O3_18 <- read.csv(here("./Data/Raw/EPAair_O3_NC2018_raw.csv"), stringsAsFactors = TRUE)
+O3_19 <- read.csv(here("./Data/Raw/EPAair_O3_NC2019_raw.csv"), stringsAsFactors = TRUE)
+PM25_18 <- read.csv(here("./Data/Raw/EPAair_PM25_NC2018_raw.csv"), stringsAsFactors = TRUE)
+PM25_19 <- read.csv(here("./Data/Raw/EPAair_PM25_NC2019_raw.csv"), stringsAsFactors = TRUE)
 
 #2 
 
+glimpse(O3_18)
+
+glimpse(O3_19)
+
+glimpse(PM25_18)
+
+glimpse(PM25_19)
 ```
 
 
@@ -52,14 +69,56 @@ The completed exercise is due on Thursday, Sept 28th @ 5:00pm.
 
 6. Save all four processed datasets in the Processed folder. Use the same file names as the raw files but replace "raw" with "processed".
 
-```{r}
+```{r wrangle data}
 #3
+
+O3_18$Date <- mdy(O3_18$Date)     #original dataset had dates set in month-day-year format,
+                                  
+O3_19$Date <- mdy(O3_19$Date)
+
+PM25_18$Date <- mdy(PM25_18$Date)
+
+PM25_19$Date <- mdy(PM25_19$Date)
 
 #4
 
+#used a pipe function to simplify select() function, assigned to new dataset
+
+O3_18_filter <- O3_18 %>% select(Date, DAILY_AQI_VALUE, Site.Name, AQS_PARAMETER_DESC, 
+                                 COUNTY, SITE_LATITUDE, SITE_LONGITUDE)
+
+O3_19_filter <- O3_19 %>% select(Date, DAILY_AQI_VALUE, Site.Name, AQS_PARAMETER_DESC, 
+                                 COUNTY, SITE_LATITUDE, SITE_LONGITUDE)
+
+PM25_18_filter <- PM25_18 %>% select(Date, DAILY_AQI_VALUE, Site.Name, AQS_PARAMETER_DESC, 
+                                     COUNTY, SITE_LATITUDE, SITE_LONGITUDE)
+
+PM25_19_filter <- PM25_19 %>% select(Date, DAILY_AQI_VALUE, Site.Name, AQS_PARAMETER_DESC, 
+                                     COUNTY, SITE_LATITUDE, SITE_LONGITUDE)
+
 #5
 
+#used a mutate() function to change all values under an existing column with "="
+
+PM25_18_filter2 <- mutate(PM25_18_filter, AQS_PARAMETER_DESC = "PM2.5")
+
+PM25_19_filter2 <- mutate(PM25_19_filter, AQS_PARAMETER_DESC = "PM2.5")
+
 #6
+
+#used write.csv() function to save and locate processed datasets
+
+write.csv(O3_18_filter, row.names=FALSE, 
+          file = here("./Data/Processed/EPAair_O3_NC2018_processed.csv"))
+
+write.csv(O3_19_filter, row.names=FALSE, 
+          file = here("./Data/Processed/EPAair_O3_NC2019_processed.csv"))
+
+write.csv(PM25_18_filter2, row.names=FALSE,
+          file=here("./Data/Processed/EPAair_PM25_NC2018_processed.csv"))
+
+write.csv(PM25_19_filter2, row.names=FALSE,
+          file=here("./Data/Processed/EPAair_PM25_NC2019_processed.csv"))
 
 ```
 
@@ -84,16 +143,62 @@ The completed exercise is due on Thursday, Sept 28th @ 5:00pm.
 
 11. Save your processed dataset with the following file name: "EPAair_O3_PM25_NC1819_Processed.csv"
 
-```{r}
+```{r combining datasets}
 #7 
+
+#created new dataset and used rbind() function
+
+combo <- rbind(O3_18_filter, O3_19_filter, PM25_18_filter2, PM25_19_filter2)
 
 #8 
 
+#created a new dataset and used pipe function to simplify wrangling
+
+#used filter() function with "%in% c()" with site names as strings to mass
+
+#filter commonalities across the 4 original datasets
+
+#used group_by() function with columns as arguments
+
+#used summarise() function to re-assign new values (the mean) to existing 
+#columns, .groups='drop' was added due to R Studio error suggestions
+
+#used mutate to create a new column by setting it equal to lubridate functions
+#month() and year()
+
+combo_wrangle <- combo %>% 
+  filter(Site.Name %in% c("Linville Falls", "Durham Armory", "Leggett", 
+                          "Hattie Avenue", "Clemmons Middle", "Mendenhall School", 
+                          "Frying Pan Mountain", "West Johnston Co.", 
+                          "Garinger High School", "Castle Hayne", 
+                          "Pitt Agri. Center", "Bryson City", "Millbrook School") ) %>%   
+  group_by(Date, Site.Name, AQS_PARAMETER_DESC, COUNTY) %>%
+  summarise(DAILY_AQI_VALUE=mean(DAILY_AQI_VALUE), 
+            SITE_LATITUDE=mean(SITE_LATITUDE), 
+            SITE_LONGITUDE=mean(SITE_LONGITUDE)) %>%
+  mutate(month=month(Date)) %>%
+  mutate(year=year(Date))
+
 #9
+
+#created a new dataset and used spread() function with arguments: dataset,
+#key (column whose values become variable names), value (column whose values
+#will be filled under their respective keys)
+
+combo_wrangle2 <- spread(combo_wrangle, AQS_PARAMETER_DESC, DAILY_AQI_VALUE)
 
 #10
 
+#used dim() function
+
+print(dim(combo_wrangle2))
+
 #11
+
+#used write.csv() function to save and locate processed dataset
+
+write.csv(combo_wrangle2, row.names=FALSE,
+          file=here("./Data/Processed/EPAair_O3_PM25_NC1819_Processed.csv"))
 
 ```
 
@@ -104,16 +209,35 @@ The completed exercise is due on Thursday, Sept 28th @ 5:00pm.
 
 13. Call up the dimensions of the summary dataset.
 
-```{r}
+```{r summary tables}
 
 #12
 
+#created new dataset and used pipe function to simplify wrangling
+
+combo_wrangle2_sum <- combo_wrangle2 %>%
+  group_by(Site.Name, month, year) %>%
+  
+  #used group_by() to aggregate/organize rows by site name, month, and year
+  
+  mutate(Mean_AQI_Ozone = mean(Ozone)) %>%
+  mutate(Mean_AQI_PM = mean(PM2.5)) %>%
+  
+  #used mutate() to create a new column that derived values (the mean) from 
+  #another column (Ozone and PM2.5)
+  
+  drop_na(Mean_AQI_Ozone)
+
+  #used drop_na() for mutated ozone column only
 
 #13
 
+#used dim() function
+
+print(dim(combo_wrangle2_sum))
 
 ```
 
 14. Why did we use the function `drop_na` rather than `na.omit`?
 
-> Answer: 
+> Answer: na.omit is used for vectors and matrices containing a sequence of values, which means it only removes "NA" from the vectors and matrices. On the other hand, drop_na will get rid of the entire row if any cell within that row has "NA". 
