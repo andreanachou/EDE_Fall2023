@@ -25,10 +25,10 @@ library(ggridges)
 here()
 
 PeterPaul.chem.nutrients <- 
-  read.csv(here("Data/Processed_KEY/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv"), stringsAsFactors = TRUE)
+  read.csv(here("./Data/Raw/Processed_KEY/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv"), stringsAsFactors = TRUE)
 PeterPaul.chem.nutrients.gathered <-
-  read.csv(here("Data/Processed_KEY/NTL-LTER_Lake_Nutrients_PeterPaulGathered_Processed.csv"), stringsAsFactors = TRUE)
-EPAair <- read.csv(here("Data/Processed_KEY/EPAair_O3_PM25_NC1819_Processed.csv"), stringsAsFactors = TRUE)
+  read.csv(here("./Data/Raw/Processed_KEY/NTL-LTER_Lake_Nutrients_PeterPaulGathered_Processed.csv"), stringsAsFactors = TRUE)
+EPAair <- read.csv(here("./Data/Raw/Processed_KEY/EPAair_O3_PM25_NC1819_Processed.csv"), stringsAsFactors = TRUE)
 
 EPAair$Date <- ymd(EPAair$Date)
 PeterPaul.chem.nutrients$sampledate <- ymd(PeterPaul.chem.nutrients$sampledate)
@@ -87,7 +87,7 @@ print(O3plot)
 
 # Fix this code
 O3plot2 <- ggplot(EPAair) +
-  geom_point(aes(x = Date, y = Ozone, color = "blue"))
+  geom_point(aes(x = Date, y = Ozone), color = "blue")
 print(O3plot2)
 
 # Add additional variables
