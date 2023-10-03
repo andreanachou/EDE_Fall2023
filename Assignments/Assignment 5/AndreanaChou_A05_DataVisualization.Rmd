@@ -1,6 +1,6 @@
 ---
 title: "Assignment 5: Data Visualization"
-author: "Student Name"
+author: "Andreana Chou"
 date: "Fall 2023"
 output: pdf_document
 geometry: margin=2.54cm
@@ -33,7 +33,26 @@ This exercise accompanies the lessons in Environmental Data Analytics on Data Vi
 ```{r initialize project}
 #1 
 
+library(tidyverse)
+library(lubridate)
+library(cowplot)
+library(here)
+
+NTL_LTF <- read.csv(here("./Data/Processed_KEY/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv"), stringsAsFactors = TRUE)
+
+#read in NTL-LTER dataset with here()
+
+Niwot <- read.csv(here("./Data/Processed_KEY/NEON_NIWO_Litter_mass_trap_Processed.csv"), stringsAsFactors = TRUE)
+
+#read in Niwot dataset with here()
+
 #2 
+
+Niwot$collectDate <- ymd(Niwot$collectDate)     #convert to date format with ymd()
+class(Niwot$collectDate)     #verify format
+
+NTL_LTF$sampledate <- ymd(NTL_LTF$sampledate)   #convert to date format with ymd()
+class(NTL_LTF$sampledate)    #verify format
 
 ```
 ## Define your theme
@@ -47,6 +66,7 @@ This exercise accompanies the lessons in Environmental Data Analytics on Data Vi
 ```{r build plot theme}
 #3
 
+my_theme <- theme(panel.background = element_rect(color = "lightblue", fill = "white"), title = element_text(family = "sans", size = 12), legend.title = element_text(color = "black"), size = 12)
 ```
 
 ## Create graphs
@@ -56,6 +76,11 @@ For numbers 4-7, create ggplot graphs and adjust aesthetics to follow best pract
 
 ```{r plot total P vs PO4}
 #4 
+
+Plot_4 <- NTL_LTF %>% ggplot(aes(x=po4, y=tp_ug)) + geom_point(aes(color=lakename)) +
+  xlim(0, 50) + geom_smooth(method="lm", color="black")
+
+Plot_4
 
 ```
 
@@ -82,6 +107,11 @@ Question: What do you observe about the variables of interest over seasons and b
 ```{r Plot litter}
 #6
 
+class(Niwot$dryMass)
+
+Plot_6 <- Niwot %>% filter(functionalGroup == "Needles") %>% ggplot(aes(x=collectDate, y=dryMass, color=nlcdClass))
+
+Plot_6
 
 #7
 
