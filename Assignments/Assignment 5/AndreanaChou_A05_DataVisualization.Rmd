@@ -94,11 +94,33 @@ Tip:
 ```{r Create boxplots}
 #5 
 
+Plot_5_temp <- NTL_LTF %>% ggplot(aes(x=factor(NTL_LTF$month, levels=1:12, labels=month.abb), y=temperature_C, color=lakename)) +
+  geom_boxplot() 
+Plot_5_temp
+
+Plot_5_TP <- NTL_LTF %>% ggplot(aes(x=factor(NTL_LTF$month, levels=1:12, labels=month.abb), y=tp_ug, color=lakename)) +
+  geom_boxplot()
+Plot_5_TP
+
+Plot_5_TN <- NTL_LTF %>% ggplot(aes(x=factor(NTL_LTF$month, levels=1:12, labels=month.abb), y=tn_ug, color=lakename)) +
+  geom_boxplot()
+Plot_5_TN
+
+combo_5 <- plot_grid(Plot_5_temp + theme(legend.position="none"), 
+                    Plot_5_TP + theme(legend.position="none"), 
+                    Plot_5_TN + theme(legend.position="none"), 
+                    nrow=1, align = 'h')
+combo_5
+
+legend_5 <- get_legend(Plot_5_temp + theme(legend.box.margin = margin(0, 0, 0, 20)))
+
+Plot_5 <- plot_grid(combo_5, legend_5, rel_widths = c(5, 0.5))
+Plot_5
 ```
 
 Question: What do you observe about the variables of interest over seasons and between lakes? 
 
-> Answer: 
+> Answer: The temperatures trend higher during the summer, with Paul Lake having higher average temperatures than Peter Lake. The trends for TP data across seasons diverged between the lakes: Peter Lake average TP trended higher during summer months while Paul Lake average TP trended lower during summer months. The distribution of TN values remained relatively constant across all months, though Peter Lake retained slightly higher average TN values than Paul Lake. Both lakes had significant number of outliers in their TP and TN data across the months.   
 
 6. [Niwot Ridge] Plot a subset of the litter dataset by displaying only the "Needles" functional group. Plot the dry mass of needle litter by date and separate by NLCD class with a color aesthetic. (no need to adjust the name of each land use)
 
