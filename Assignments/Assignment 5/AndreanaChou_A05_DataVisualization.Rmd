@@ -33,16 +33,19 @@ This exercise accompanies the lessons in Environmental Data Analytics on Data Vi
 ```{r initialize project}
 #1 
 
-library(tidyverse)
+library(tidyverse)     #load libraries
 library(lubridate)
 library(cowplot)
 library(here)
 
-NTL_LTF <- read.csv(here("./Data/Processed_KEY/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv"), stringsAsFactors = TRUE)
+NTL_LTF <- read.csv(here(
+  "./Data/Processed_KEY/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv"), 
+                    stringsAsFactors = TRUE)
 
 #read in NTL-LTER dataset with here()
 
-Niwot <- read.csv(here("./Data/Processed_KEY/NEON_NIWO_Litter_mass_trap_Processed.csv"), stringsAsFactors = TRUE)
+Niwot <- read.csv(here("./Data/Processed_KEY/NEON_NIWO_Litter_mass_trap_Processed.csv"), 
+                  stringsAsFactors = TRUE)
 
 #read in Niwot dataset with here()
 
@@ -66,7 +69,17 @@ class(NTL_LTF$sampledate)    #verify format
 ```{r build plot theme}
 #3
 
-my_theme <- theme(panel.background = element_rect(color = "lightblue", fill = "white"), title = element_text(family = "sans", size = 12), legend.title = element_text(color = "black"), size = 12)
+my_theme <- theme(panel.background = element_rect(color = "lightblue", 
+                                                  fill = "white"),
+                  panel.grid.major=element_line(color="lightblue", 
+                                                linewidth=0.5), 
+                  legend.title = element_text(color = "black"))
+
+#panel.background sets up plot background
+#panel.grid.major sets up a grid and axis ticks 
+#legend.title sets up the legend
+
+theme_set(my_theme)
 ```
 
 ## Create graphs
@@ -77,8 +90,16 @@ For numbers 4-7, create ggplot graphs and adjust aesthetics to follow best pract
 ```{r plot total P vs PO4}
 #4 
 
-Plot_4 <- NTL_LTF %>% ggplot(aes(x=po4, y=tp_ug)) + geom_point(aes(color=lakename)) +
-  xlim(0, 50) + geom_smooth(method="lm", color="black")
+Plot_4 <- NTL_LTF %>% ggplot(aes(x=po4, y=tp_ug)) + 
+  geom_point(aes(color=lakename)) +
+  xlim(0, 50) + 
+  geom_smooth(method="lm", color="black") +
+  xlab("Phosphate (ug)") +
+  ylab("Phosphorus (ug)")
+
+#used geom_point() to create scatter plot when both variables are numeric
+#set color=lakename as an argument within geom_point() aesthetics
+#added geom_smooth() to create line of best fit (method="lm") and set color to black
 
 Plot_4
 
@@ -94,28 +115,65 @@ Tip:
 ```{r Create boxplots}
 #5 
 
-Plot_5_temp <- NTL_LTF %>% ggplot(aes(x=factor(NTL_LTF$month, levels=1:12, labels=month.abb), y=temperature_C, color=lakename)) +
-  geom_boxplot() 
+Plot_5_temp <- NTL_LTF %>% ggplot(aes(x=factor(NTL_LTF$month, levels=1:12,
+                                               labels=month.abb), 
+                                      y=temperature_C, color=lakename)) +
+  geom_boxplot() + 
+  scale_x_discrete(name="Month", drop=FALSE) +
+  ylab("Temp (C)")
 Plot_5_temp
 
-Plot_5_TP <- NTL_LTF %>% ggplot(aes(x=factor(NTL_LTF$month, levels=1:12, labels=month.abb), y=tp_ug, color=lakename)) +
-  geom_boxplot()
+#boxplot for temperature using geom_boxplot()
+#converted months to factor before setting to x axis, ensured months were in levels
+  #1-12 for all 12 months, and labeled using their month abbreviations
+#set color=lakename as an argument within ggplot aesthetics
+
+Plot_5_TP <- NTL_LTF %>% ggplot(aes(x=factor(NTL_LTF$month, levels=1:12, 
+                                             labels=month.abb), 
+                                    y=tp_ug, color=lakename)) +
+  geom_boxplot() + 
+  scale_x_discrete(name="Month", drop=FALSE) +
+  ylab("Phosphorus (ug)")
 Plot_5_TP
 
-Plot_5_TN <- NTL_LTF %>% ggplot(aes(x=factor(NTL_LTF$month, levels=1:12, labels=month.abb), y=tn_ug, color=lakename)) +
-  geom_boxplot()
+#boxplot for TP using geom_boxplot()
+#converted months to factor before setting to x axis, ensured months were in levels
+  #1-12 for all 12 months, and labeled using their month abbreviations
+#set color=lakename as an argument within ggplot aesthetics
+
+Plot_5_TN <- NTL_LTF %>% ggplot(aes(x=factor(NTL_LTF$month, levels=1:12, 
+                                             labels=month.abb), 
+                                    y=tn_ug, color=lakename)) +
+  geom_boxplot() + 
+  scale_x_discrete(name="Month", drop=FALSE) +
+  ylab("Nitrogen (ug)")
 Plot_5_TN
+
+#boxplot for TN using geom_boxplot()
+#converted months to factor before setting to x axis, ensured months were in levels
+  #1-12 for all 12 months, and labeled using their month abbreviations
+#set color=lakename as an argument within ggplot aesthetics
 
 combo_5 <- plot_grid(Plot_5_temp + theme(legend.position="none"), 
                     Plot_5_TP + theme(legend.position="none"), 
-                    Plot_5_TN + theme(legend.position="none"), 
-                    nrow=1, align = 'h')
+                    Plot_5_TN + theme(legend.position="bottom"), 
+                    nrow=3, align = 'h', rel_heights=c(1, 1, 1.5))
 combo_5
 
-legend_5 <- get_legend(Plot_5_temp + theme(legend.box.margin = margin(0, 0, 0, 20)))
+#combined all three plots into one using plot_grid(), aligning them in one row horizontally
+#removed repeating legends by using theme(legend.position="none")
+#assigned to object combo_5
 
-Plot_5 <- plot_grid(combo_5, legend_5, rel_widths = c(5, 0.5))
-Plot_5
+#legend_5 <- get_legend(Plot_5_temp + theme(legend.box.margin = margin(0, 0, 0, 20)))
+
+#extracted legend from Plot_5_temp using get_legend() and assigned to object legend_5
+
+#Plot_5 <- plot_grid(combo_5, legend_5, rel_widths = c(5, 0.5))
+#Plot_5
+
+#created final plot using plot_grid to combine combo_5 and legend_5 objects, set relative
+#widths of graphs and legends using rel_widths at a ratio of 10:1 
+
 ```
 
 Question: What do you observe about the variables of interest over seasons and between lakes? 
@@ -129,16 +187,35 @@ Question: What do you observe about the variables of interest over seasons and b
 ```{r Plot litter}
 #6
 
-class(Niwot$dryMass)
-
-Plot_6 <- Niwot %>% filter(functionalGroup == "Needles") %>% ggplot(aes(x=collectDate, y=dryMass, color=nlcdClass))
+Plot_6 <- Niwot %>% filter(functionalGroup == "Needles") %>% 
+  ggplot(aes(x=collectDate, y=dryMass, color=nlcdClass)) + 
+  geom_point() +
+  xlab("Collection Date") +
+  ylab("Dry Mass (g)")
 
 Plot_6
 
+#filtered dataset for Needles functional group prior to applying ggplot()
+#set color=nlcdClass as an argument within ggplot aesthetics
+#used geom_point() to create scatter plot
+
 #7
 
+Plot_7 <-Niwot %>% filter(functionalGroup == "Needles") %>% 
+  ggplot(aes(x=collectDate, y=dryMass)) + 
+  geom_point() + 
+  facet_wrap(vars(nlcdClass), nrow=3) +
+  xlab("Collection Date") +
+  ylab("Dry Mass (g)")
+
+Plot_7
+
+#filtered dataset for Needles functional group prior to applying ggplot()
+#used geom_point() to create scatter plot
+#facet_wrap() set nlcdClass as a variable within vars() to create three separate plots
+  #based on nlcdClass, nrow=3 ensured plots were stacked on top of each other
 
 ```
 Question: Which of these plots (6 vs. 7) do you think is more effective, and why? 
 
-> Answer:
+> Answer: The facet plot (7) is more effective because the data points are more clearly defined. The color plot (6) overlays the data points over each other, so even though there is color labeling, we cannot see the full spread of data across all three classes. 
