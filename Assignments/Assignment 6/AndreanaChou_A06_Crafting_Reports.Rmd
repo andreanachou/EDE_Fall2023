@@ -8,18 +8,18 @@ output: pdf_document
 ## Objectives:
 
 1.  More practice with R code chunk options
-1.  Gain proficiency with figures, tables (w/`Kable`) table of contents, etc.
-1.  Debugging knitting issues
+2.  Gain proficiency with figures, tables (w/`Kable`) table of contents, etc.
+3.  Debugging knitting issues
 
 ## Directions
 
 1.  Rename this file `<FirstLast>_A06_CraftingReports.Rmd` (replacing `<FirstLast>` with your first and last name).
-1.  Change "Student Name" on line 3 (above) with your name.
-1.  Work through the tasks, **creating code and output** that fulfill each instruction.
-1.  Be sure your code is tidy; use line breaks to ensure your code fits in the knitted output.
-1.  Be sure to **answer the questions** in this assignment document.
-1.  When you have completed the assignment, **Knit** the text and code into a single PDF file.
-1.  **Be sure that you also commit and push your final Rmd document to your GitHub account**.
+2.  Change "Student Name" on line 3 (above) with your name.
+3.  Work through the tasks, **creating code and output** that fulfill each instruction.
+4.  Be sure your code is tidy; use line breaks to ensure your code fits in the knitted output.
+5.  Be sure to **answer the questions** in this assignment document.
+6.  When you have completed the assignment, **Knit** the text and code into a single PDF file.
+7.  **Be sure that you also commit and push your final Rmd document to your GitHub account**.
 
 ## Task 1 - Basic Markdown
 
@@ -27,14 +27,27 @@ Using markdown, create a table beneath the `Table: EPA Air Quality` line below t
 
 Table: EPA Air Quality
 
+```{r table, echo=FALSE}
+epa_air <- cbind(c("Item", "Source", "Date", "Filename"), 
+                 c("Value", "EPA Air Quality System (AQS)", 
+                   "2018-2019", "EPAair_O3_PM25_NC1819_Processed.csv"))
 
----
+#created a matrix by binding the two vector columns, assigned to object epa_air
+
+knitr::kable(epa_air, align=c("r", "l"))
+
+#pulled singular function "kable" from knitr using "::"
+#used epa_air matrix, applied different alignment to the columns using vector c()
+```
+
+------------------------------------------------------------------------
 
 ## Task 2 - Import packages and data, suppressing messages
 
 Set the following R code chunk so that it runs when knit, but no messages, errors, or any output is shown. The code itself, however, should be displayed.
 
-```{r project.setup}
+```{r project.setup, results="hide", echo=TRUE, message=FALSE, warning=FALSE}
+
 #Import libraries
 library(tidyverse);library(lubridate);library(here);library(knitr)
 
@@ -43,9 +56,13 @@ epa_data <- read.csv(
   here("data","processed_KEY","EPAair_O3_PM25_NC1819_Processed.csv"),
   stringsAsFactors = TRUE) %>% 
   mutate(Date = ymd(Date))
+
+#had to use results="hide" instead of include=FALSE to keep output from being
+  #shown, echo=TRUE ensures code is displayed
+#message=FALSE to hide messages, warning=FALSE to hide errors
 ```
 
----
+------------------------------------------------------------------------
 
 ## Task 3: Creating tables
 
@@ -58,7 +75,6 @@ Customize the chunk options such that the code is run but is not displayed in th
 > -   Use `"$\\mu g/m^3$"` as a column name to generate a nicely formatted string via markdown/MathJax notation
 >
 > -   If your output table spans across two pages, try inserting a page break in the markdown just before your code chunk.
-
 
 ```{r data.summary}
 #Compute mean PM2.5 concentration for each county, sorted by value
@@ -80,19 +96,18 @@ summary_Ozone <- epa_data %>%
 
 ```
 
----
+------------------------------------------------------------------------
 
 ## Task 3: Plots
 
 Create two separate code chunks that create boxplots of the distribution of Ozone levels by month using, one for only records collected in 2018 and one for records in 2019. Customize the chunk options such that the final figures are displayed but not the code used to generate the figures. In addition, align the plots on the left side of the page and set the figure heights so both plots fit on the same page with minimal space remaining. Lastly, add a `fig.cap` chunk option to add a caption (title) to your plot that will display underneath the figure.
 
+------------------------------------------------------------------------
 
-
----
 \newpage
 
 ## Task 4: Knit and submit.
-Add a table of contents to your document and knit to a PDF. Submit your PDF to Sakai, but also be sure to commit and push your Rmd file used to create this knit document to GitHub. In the section below, add a link to your GitHub repository. 
+
+Add a table of contents to your document and knit to a PDF. Submit your PDF to Sakai, but also be sure to commit and push your Rmd file used to create this knit document to GitHub. In the section below, add a link to your GitHub repository.
 
 ## Git Repository
-
