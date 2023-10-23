@@ -43,6 +43,12 @@ NTL_LTER$sampledate <- mdy(NTL_LTER$sampledate)
 
 #2
 
+my_theme <- theme_classic(base_size = 12) + 
+  theme(panel.background = element_rect(color = "lightblue", fill = "white"),
+        panel.grid.major = element_line(color = "lightblue", linewidth = 0.5),
+        legend.title = element_text(color = "black"),
+        legend.position = "right")
+theme_set(my_theme)
 
 ```
 
@@ -51,8 +57,8 @@ Our first research question is: Does mean lake temperature recorded during July 
 
 3. State the null and alternative hypotheses for this question:
 > Answer:
-H0: 
-Ha: 
+H0: Mean lake temperature recorded during July does not change with depth across all lakes.
+Ha: Mean lake temperature recorded during July does differ with depth across all lakes. 
 
 
 4.  Wrangle your NTL-LTER dataset with a pipe function so that the records meet the following criteria: 
@@ -65,16 +71,29 @@ Ha:
 ```{r scatterplot}
 #4
 
+NTL_LTER4 <- NTL_LTER %>% 
+  select("lakename", "year4", "daynum", "depth", "temperature_C") %>% 
+  filter(between(daynum, 182, 213)) %>% 
+  drop_na(temperature_C)
 
 #5
 
+temp_depth_scatter <- NTL_LTER4 %>% ggplot(aes(x=depth, y=temperature_C)) + 
+  geom_point() + 
+  geom_smooth(method="lm") + ylim(0, 35) + 
+  labs(x="Lake Depth (m)", y="Temperature (C)", 
+       title="Peter & Paul Lakes: July Lake Depth Temperatures")
+temp_depth_scatter
 
 ```
 
 
 6. Interpret the figure. What does it suggest with regards to the response of temperature to depth? Do the distribution of points suggest about anything about the linearity of this trend?
 
-> Answer: 
+> Answer: The figure suggests temperature will decrease with lake depth, but plateaus
+after a depth of 10 meters. The distribution of points suggests a linear trend, but
+mathematical analysis is needed to determine how strong the relationship is between
+temperature and lake depth. 
 
 
 7. Perform a linear regression to test the relationship and display the results
@@ -82,13 +101,15 @@ Ha:
 ```{r linear.regression}
 #7
 
+temp_depth_regression <- lm(data=NTL_LTER4, depth ~ temperature_C)
+summary(temp_depth_regression)
 
 ```
 
 
 8. Interpret your model results in words. Include how much of the variability in temperature is explained by changes in depth, the degrees of freedom on which this finding is based, and the statistical significance of the result. Also mention how much temperature is predicted to change for every 1m change in depth. 
 
-> Answer:
+> Answer: 0.7368 (or 73.68%) of the variability in temperature is explained by changes in depth, based on 9974 degrees of freedom. For every meter increase of depth, the temperature decreases by 0.37 degrees C. These findings are statistically significant because the p-value is less than 0.05. 
 
 
 ---
