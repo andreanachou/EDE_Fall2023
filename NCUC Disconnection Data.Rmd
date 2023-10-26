@@ -1,0 +1,49 @@
+---
+title: "NCUC Disconnection Data"
+output: html_document
+date: "2023-10-24"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r load}
+library(tidyverse)
+library(shiny)
+library(dplyr)
+library(here)
+library(yaml)
+
+disconnections <- read.csv(here("./NCUC_Disconnection_1996_2022.csv"), 
+                           stringsAsFactors = TRUE,
+                           header = TRUE)
+```
+
+```{r select box company}
+selectInput(inputId = "company",
+            label = h3("Select electric utility"), 
+            choices = list("Duke Power" = "Duke Energy Carolinas", 
+                   "Progress Energy" = "Duke Energy Progress", 
+                   "Dominion North Carolina Power" = "North Carolina Power"), 
+    selected = "N/A")
+
+selectInput(inputId = "month",
+            label = h3("Select month"), 
+            choices = list(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12), 
+    selected = "N/A")
+
+selectInput(inputId = "year",
+            label = h3("Select year"), 
+            choices = list(2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014,
+                           2013, 2012, 2011, 2010, 2009, 2008, 2007, 2006, 2005,
+                           2004, 2003, 2002, 2001, 2000, 1999, 1998, 1997, 1996), 
+    selected = "N/A")
+
+renderPrint(paste("Number of disconnections for", input$company))
+
+#"select" as first argument
+```
+
+
