@@ -175,9 +175,12 @@ GaringerOzone.monthly <- GaringerOzone %>%
   group_by(Month, Year) %>%
   summarize(Mean_Ozone = mean(Daily.Max.8.hour.Ozone.Concentration), .groups="drop")
 
+#ungroup()
 #created new Date column with mutate() and paste() function, reassigned to dataframe
 GaringerOzone.monthly <- GaringerOzone.monthly %>%
-  mutate(Date = paste(Year, Month))
+  mutate(Date = make_date(year=Year, month=Month, day=1))
+
+#GaringerOzone.monthly$Date <- order(as.Date(GaringerOzone.monthly$Date, format="%Y-%m-%d"))
 
 ```
 
@@ -203,7 +206,9 @@ GaringerOzone.monthly.ts <- ts(GaringerOzone.monthly$Mean_Ozone,
 ```{r}
 #11
 
+#applied time-series objects as arguments within stl()
 Garinger_daily_decomp <- stl(GaringerOzone.daily.ts, s.window = "periodic")
+#plot() stl object to obtain decomposed trends
 plot(Garinger_daily_decomp)
 
 
@@ -229,8 +234,13 @@ summary(smk_Garinger_monthly)
 ```{r}
 # 13
 
+monthly_plot_13 <- GaringerOzone.monthly %>%
+  ggplot(aes(x=Date, y=Mean_Ozone)) +
+  geom_point() + 
+  geom_line() +
+  ylab("Mean Ozone Concentration (ppm)")
 
-
+monthly_plot_13
 
 ```
 
@@ -245,12 +255,23 @@ summary(smk_Garinger_monthly)
 ```{r}
 #15
 
+#subtract seasonal components from GaringerOzone decomposition by selecting for
+#all values "," from columns 2:3
+GaringerOzone.monthly_noseasonal <- 
+  as.data.frame(Garinger_monthly_decomp$time.series[, 2:3])
 
+GaringerOzone.monthly_noseasonal <-
+  mutate(GaringerOzone.monthly_noseasonal, 
+         Observed = GaringerOzone.monthly$Mean_Ozone,
+         Date = GaringerOzone.monthly$Date)
 
 #16
 
+Garinger.monthly.noseasonal.ts <- ts(GaringerOzone.monthly_noseasonal$Observed,
+                                     frequency=12, start=c(2010, 1))
 
-
+Garinger.monthly.noseasonal.mk <- MannKendall(Garinger.monthly.noseasonal.ts)
+summary(Garinger.monthly.noseasonal.mk)
 
 ```
 
