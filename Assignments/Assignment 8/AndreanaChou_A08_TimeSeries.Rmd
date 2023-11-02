@@ -172,15 +172,13 @@ GaringerOzone <- GaringerOzone %>%
 #obtained mean ozone by grouping month, then year, and applying mean()
 GaringerOzone.monthly <- GaringerOzone %>% 
   mutate(Month = month(Date), Year = year(Date)) %>%
-  group_by(Month, Year) %>%
+  group_by(Year, Month) %>%
   summarize(Mean_Ozone = mean(Daily.Max.8.hour.Ozone.Concentration), .groups="drop")
 
 #ungroup()
 #created new Date column with mutate() and paste() function, reassigned to dataframe
 GaringerOzone.monthly <- GaringerOzone.monthly %>%
   mutate(Date = make_date(year=Year, month=Month, day=1))
-
-#GaringerOzone.monthly$Date <- order(as.Date(GaringerOzone.monthly$Date, format="%Y-%m-%d"))
 
 ```
 
@@ -222,7 +220,8 @@ plot(Garinger_monthly_decomp)
 ```{r}
 #12
 
-smk_Garinger_monthly <- smk.test(GaringerOzone.monthly.ts)
+#applied seasonal mann kendall() and summary() to time series object
+smk_Garinger_monthly <- SeasonalMannKendall(GaringerOzone.monthly.ts)
 summary(smk_Garinger_monthly)
 
 ```
@@ -234,6 +233,7 @@ summary(smk_Garinger_monthly)
 ```{r}
 # 13
 
+#generated monthly plot with geom_point(), geom_line()
 monthly_plot_13 <- GaringerOzone.monthly %>%
   ggplot(aes(x=Date, y=Mean_Ozone)) +
   geom_point() + 
@@ -246,7 +246,7 @@ monthly_plot_13
 
 14. To accompany your graph, summarize your results in context of the research question. Include output from the statistical test in parentheses at the end of your sentence. Feel free to use multiple sentences in your interpretation.
 
-> Answer: 
+> Answer: The graph shows a seasonal variation in mean ozone concentration by month. With a tau of -0.143, the Seasonal Mann-Kendall test reveals a negative monotonic trend. The p-value of 0.046724 rejects the H0 of no monotonic trend present, which implies mean ozone concentration has monotonically decreased over time (between 2010 and 2020).
 
 15. Subtract the seasonal component from the `GaringerOzone.monthly.ts`. Hint: Look at how we extracted the series components for the EnoDischarge on the lesson Rmd file.
 
@@ -255,24 +255,17 @@ monthly_plot_13
 ```{r}
 #15
 
-#subtract seasonal components from GaringerOzone decomposition by selecting for
-#all values "," from columns 2:3
-GaringerOzone.monthly_noseasonal <- 
-  as.data.frame(Garinger_monthly_decomp$time.series[, 2:3])
-
-GaringerOzone.monthly_noseasonal <-
-  mutate(GaringerOzone.monthly_noseasonal, 
-         Observed = GaringerOzone.monthly$Mean_Ozone,
-         Date = GaringerOzone.monthly$Date)
+#select for only the "seasonal" series in the Grainger_monthly_decomposition time series from 
+#GaringerOzone.ts, resulting in a time-series object with modified ozone values
+GaringerOzone.monthly_nonseasonal <- GaringerOzone.monthly.ts -
+  Garinger_monthly_decomp$time.series[, "seasonal"]
 
 #16
 
-Garinger.monthly.noseasonal.ts <- ts(GaringerOzone.monthly_noseasonal$Observed,
-                                     frequency=12, start=c(2010, 1))
-
-Garinger.monthly.noseasonal.mk <- MannKendall(Garinger.monthly.noseasonal.ts)
+#applied MannKendall() and summary() to time-series object
+Garinger.monthly.noseasonal.mk <- MannKendall(GaringerOzone.monthly_nonseasonal)
 summary(Garinger.monthly.noseasonal.mk)
 
 ```
 
-> Answer: 
+> Answer: By analyzing the monthly ozone data without their seasonality component, we still find a negative monotonic trend due to tau value of -0.165, which is slightly stronger than that from the Seasonal Mann Kendall analysis. We reject the H0 that there is no monotonic trend present due to the p-value of 0.0075402. The p-value is also more significant than that from the Seasonal Mann Kendall analysis. This implied that the non-seasonal mean ozone concentration has monotonically decreased over time (between 2010 and 2020).
