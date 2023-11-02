@@ -138,15 +138,23 @@ Let's tackle a similar question from a different approach. Here, we want to expl
 ```{r temperature.model}
 #9
 
+<<<<<<< HEAD
 #assigned multi-variable linear regression model to temp_var AIC object
 temp_var <- lm(data = NTL_LTER4, temperature_C ~ year4 + daynum + depth)
 
 #performed AIC using AIC object
+=======
+temp_var <- lm(data = NTL_LTER4, temperature_C ~ year4 + daynum + depth)
+
+>>>>>>> 11ec302e08f47f318d70db723b2930aa3514d7b5
 step(temp_var)
 
 #10
 
+<<<<<<< HEAD
 #performed linear regression on AIC's recommended variables
+=======
+>>>>>>> 11ec302e08f47f318d70db723b2930aa3514d7b5
 temp_regression <- lm(data = NTL_LTER4, temperature_C ~ year4 + daynum + depth)
 summary(temp_regression)
 
@@ -166,6 +174,7 @@ summary(temp_regression)
 ```{r anova.model}
 #12
 
+<<<<<<< HEAD
 #wrangle data by parsing lakename and depth categories, used summarise function to 
 #create average temperature column
 lakes_average <- NTL_LTER4 %>% group_by(lakename, depth) %>% 
@@ -176,6 +185,14 @@ lakes_anova <- aov(data=lakes_average, temp_C_average ~ lakename)
 summary(lakes_anova)
 
 #performed linear regression model between temperature and lake name
+=======
+lakes_average <- NTL_LTER4 %>% group_by(lakename, depth) %>% 
+  summarise(temp_C_average = mean(temperature_C)) 
+
+lakes_anova <- aov(data=lakes_average, temp_C_average ~ lakename)
+summary(lakes_anova)
+
+>>>>>>> 11ec302e08f47f318d70db723b2930aa3514d7b5
 lakes_anova2 <- lm(data=lakes_average, temp_C_average ~ lakename)
 summary(lakes_anova2)
 
@@ -190,10 +207,13 @@ summary(lakes_anova2)
 ```{r scatterplot.2}
 #14.
 
+<<<<<<< HEAD
 #created scatterplot with geom_point, alpha=0.5 denotes transparency of points,
 #geom_smooth(method="lm") to create line of best fit, ylim to set upper 
 #and lower bounds on y-axis
 
+=======
+>>>>>>> 11ec302e08f47f318d70db723b2930aa3514d7b5
 temp_depth_scatter2 <- NTL_LTER4 %>% 
   ggplot(aes(x=depth, y=temperature_C, color=lakename)) + 
   geom_point(alpha=0.5) + 
@@ -208,7 +228,11 @@ temp_depth_scatter2
 
 ```{r tukey.test}
 #15
+<<<<<<< HEAD
 #Tukey HSD test contains ANOVA model as argument
+=======
+
+>>>>>>> 11ec302e08f47f318d70db723b2930aa3514d7b5
 TukeyHSD(lakes_anova)
 ```
 
@@ -227,10 +251,15 @@ TukeyHSD(lakes_anova)
 
 ```{r t.test}
 
+<<<<<<< HEAD
 #wrangle data by filtering out Crampton Lake and Ward Lake names
 crampton_ward <- NTL_LTER4 %>% filter(lakename == c("Crampton Lake", "Ward Lake"))
 
 #t-test function to analyze temperature by lake name
+=======
+crampton_ward <- NTL_LTER4 %>% filter(lakename == c("Crampton Lake", "Ward Lake"))
+
+>>>>>>> 11ec302e08f47f318d70db723b2930aa3514d7b5
 t.test(crampton_ward$temperature_C ~ crampton_ward$lakename, var.equal = TRUE)
 ```
 

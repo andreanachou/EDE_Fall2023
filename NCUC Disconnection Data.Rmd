@@ -2,23 +2,33 @@
 title: "NCUC Disconnection Data"
 output: html_document
 date: "2023-10-24"
+<<<<<<< HEAD
 runtime: shiny
+=======
+>>>>>>> 11ec302e08f47f318d70db723b2930aa3514d7b5
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 11ec302e08f47f318d70db723b2930aa3514d7b5
 ```{r load}
 library(tidyverse)
 library(shiny)
 library(dplyr)
 library(here)
 library(yaml)
+<<<<<<< HEAD
 library(trend)
 library(zoo)
 library(Kendall)
 library(tseries)
+=======
+>>>>>>> 11ec302e08f47f318d70db723b2930aa3514d7b5
 
 disconnections <- read.csv(here("./NCUC_Disconnection_1996_2022.csv"), 
                            stringsAsFactors = TRUE,
@@ -50,6 +60,7 @@ renderPrint(paste("Number of disconnections for", input$company))
 #"select" as first argument
 ```
 
+<<<<<<< HEAD
 ```{r time series all}
 
 disconnections_ts <- ts(disconnections$Number_Disconnections_Res, 
@@ -74,3 +85,6 @@ dominion_decomp <- stl(dominion_subset_ts, s.window="periodic")
 plot(dominion_decomp)
 
 ```
+=======
+
+>>>>>>> 11ec302e08f47f318d70db723b2930aa3514d7b5
