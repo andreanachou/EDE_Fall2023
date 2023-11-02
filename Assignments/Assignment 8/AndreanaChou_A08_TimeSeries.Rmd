@@ -32,6 +32,8 @@ library(tidyverse)
 library(lubridate)
 library(zoo)
 library(trend)
+library(Kendall)
+library(tseries)
 
 #assigned custom theme to my_theme object
 my_theme <- theme_classic(base_size = 12) + 
@@ -51,6 +53,35 @@ theme_set(my_theme)
 ```{r, message = FALSE}
 #1
 
+#read raw data files individually
+EPA_2010 <- read.csv(here("Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2010_raw.csv"), 
+                     stringsAsFactors = TRUE)
+EPA_2011 <- read.csv(here("Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2011_raw.csv"), 
+                     stringsAsFactors = TRUE)
+EPA_2012 <- read.csv(here("Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2012_raw.csv"), 
+                     stringsAsFactors = TRUE)
+EPA_2013 <- read.csv(here("Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2013_raw.csv"), 
+                     stringsAsFactors = TRUE)
+EPA_2014 <- read.csv(here("Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2014_raw.csv"), 
+                     stringsAsFactors = TRUE)
+EPA_2015 <- read.csv(here("Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2015_raw.csv"), 
+                     stringsAsFactors = TRUE)
+EPA_2016 <- read.csv(here("Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2016_raw.csv"), 
+                     stringsAsFactors = TRUE)
+EPA_2017 <- read.csv(here("Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2017_raw.csv"), 
+                     stringsAsFactors = TRUE)
+EPA_2018 <- read.csv(here("Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2018_raw.csv"), 
+                     stringsAsFactors = TRUE)
+EPA_2019 <- read.csv(here("Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2019_raw.csv"), 
+                     stringsAsFactors = TRUE)
+
+#create a list out of all raw files
+join_list <- list(EPA_2010, EPA_2011, EPA_2012, EPA_2013, EPA_2014, EPA_2015, 
+                  EPA_2016, EPA_2017, EPA_2018, EPA_2019)
+
+#use reduce() function with
+GaringerOzone <- reduce(join_list, full_join)
+
 ```
 
 ## Wrangle
@@ -66,12 +97,30 @@ theme_set(my_theme)
 ```{r}
 # 3
 
+#use mdy from lubridate to set as date
+GaringerOzone$Date <- mdy(GaringerOzone$Date)
+
+#check data class
+data.class(GaringerOzone$Date)
+
 # 4
+
+#use select() to extract columns
+GaringerOzone_4 <- GaringerOzone %>% 
+  select(Date, Daily.Max.8.hour.Ozone.Concentration,
+         DAILY_AQI_VALUE)
 
 # 5
 
+#create a sequence of dates and set as a dataframe
+Days <- as.data.frame(seq(as.Date("2010-01-01"), as.Date("2019-12-31"), "days"))
+#change name of singular column using colnames()
+colnames(Days) <- "Date"
+
 # 6
 
+#left_join with Days before GaringerOzone_4
+GaringerOzone <- left_join(Days, GaringerOzone_4)
 
 ```
 
@@ -82,9 +131,17 @@ theme_set(my_theme)
 ```{r}
 #7
 
+#created line plot with geom_line() and inserted trend line with geom_smooth
+Ozone_plot7 <- GaringerOzone %>% 
+  ggplot(aes(x=Date, y=Daily.Max.8.hour.Ozone.Concentration)) +
+  geom_line() +
+  geom_smooth(method="lm") +
+  ylab(expression("Max. Daily Ozone Concentration (ppm)"))
+Ozone_plot7  
+
 ```
 
->Answer:
+>Answer: The plot suggests there is a slight downward trend in ozone concentration over time, but more analysis is required to determine the strength of the relationship.
 
 ## Time Series Analysis
 
@@ -95,15 +152,32 @@ Study question: Have ozone concentrations changed over the 2010s at this station
 ```{r}
 #8
 
+#applied mutate() function and nested interpolation function approx() within
+GaringerOzone <- GaringerOzone %>%
+  mutate(Daily.Max.8.hour.Ozone.Concentration =
+           approx(Date, Daily.Max.8.hour.Ozone.Concentration, method = "linear",
+                  xout = Date)$y) 
+
 ```
 
-> Answer: 
+> Answer: Piecewise constant is not used because the "nearest neighbor" approach would not work well if the dates are equidistantly apart. Spline is not used because we are plotting Ozone concentrations using a linear, not quadratic model. 
 
 
 9. Create a new data frame called `GaringerOzone.monthly` that contains aggregated data: mean ozone concentrations for each month. In your pipe, you will need to first add columns for year and month to form the groupings. In a separate line of code, create a new Date column with each month-year combination being set as the first day of the month (this is for graphing purposes only)
 
 ```{r}
 #9
+
+#added new Month and Year columns with mutate() and lubridate functions
+#obtained mean ozone by grouping month, then year, and applying mean()
+GaringerOzone.monthly <- GaringerOzone %>% 
+  mutate(Month = month(Date), Year = year(Date)) %>%
+  group_by(Month, Year) %>%
+  summarize(Mean_Ozone = mean(Daily.Max.8.hour.Ozone.Concentration), .groups="drop")
+
+#created new Date column with mutate() and paste() function, reassigned to dataframe
+GaringerOzone.monthly <- GaringerOzone.monthly %>%
+  mutate(Date = paste(Year, Month))
 
 ```
 
@@ -113,6 +187,14 @@ Study question: Have ozone concentrations changed over the 2010s at this station
 ```{r}
 #10
 
+#created a time-series object with frequency=365 due to daily values
+GaringerOzone.daily.ts <- ts(GaringerOzone$Daily.Max.8.hour.Ozone.Concentration,
+                             frequency=365, start=c(2010, 1))
+
+#created a time-series object with frequency=12 due to monthly values
+GaringerOzone.monthly.ts <- ts(GaringerOzone.monthly$Mean_Ozone, 
+                               frequency=12, start=c(2010, 1))
+
 ```
 
 
@@ -121,7 +203,12 @@ Study question: Have ozone concentrations changed over the 2010s at this station
 ```{r}
 #11
 
+Garinger_daily_decomp <- stl(GaringerOzone.daily.ts, s.window = "periodic")
+plot(Garinger_daily_decomp)
 
+
+Garinger_monthly_decomp <- stl(GaringerOzone.monthly.ts, s.window = "periodic")
+plot(Garinger_monthly_decomp)
 ```
 
 
@@ -130,11 +217,12 @@ Study question: Have ozone concentrations changed over the 2010s at this station
 ```{r}
 #12
 
-
+smk_Garinger_monthly <- smk.test(GaringerOzone.monthly.ts)
+summary(smk_Garinger_monthly)
 
 ```
 
-> Answer: 
+> Answer: A seasonal Mann-Kendall is the most appropriate because the data points are temporally spaced by month, which means we will cover all the seasons of a year.
 
 13. Create a plot depicting mean monthly ozone concentrations over time, with both a geom_point and a geom_line layer. Edit your axis labels accordingly.
 
