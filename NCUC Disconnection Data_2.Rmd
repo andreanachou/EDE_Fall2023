@@ -1,0 +1,35 @@
+---
+title: "NCUC Disconnection Data_2"
+output: html_document
+date: "2023-11-04"
+runtime: shiny
+---
+
+```{r load}
+library(tidyverse)
+#library(shiny)
+library(dplyr)
+library(here)
+library(yaml)
+library(trend)
+library(Kendall)
+library(tseries)
+#library(conflicted)
+
+disconnections <- read.csv(here("./NCUC_Disconnection_1996_2022.csv"), 
+                           stringsAsFactors = TRUE,
+                           header = TRUE)
+
+```
+
+```{r select boxes, echo=FALSE}
+selectInput(inputId = "company",
+            label = h3("Select electric utility"), 
+            choices = list("Duke Energy Carolinas" = "Duke Energy Carolinas", 
+                   "Duke Energy Progress" = "Duke Energy Progress", 
+                   "Dominion" = "Dominion"), 
+    selected = "N/A")
+
+
+
+```

@@ -31,10 +31,10 @@ library(Kendall)
 library(tseries)
 
 # Set theme
-mytheme <- theme_classic(base_size = 14) +
-  theme(axis.text = element_text(color = "black"), 
-        legend.position = "top")
-theme_set(mytheme)
+#mytheme <- theme_classic(base_size = 14) +
+  #theme(axis.text = element_text(color = "black"), 
+        #legend.position = "top")
+#theme_set(mytheme)
 
 #Read Eno river data
 EnoDischarge <- read.csv("./Data/Processed_KEY/USGS_Site02085000_Flow_Processed.csv",

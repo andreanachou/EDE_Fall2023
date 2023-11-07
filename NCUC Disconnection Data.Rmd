@@ -2,45 +2,35 @@
 title: "NCUC Disconnection Data"
 output: html_document
 date: "2023-10-24"
-<<<<<<< HEAD
 runtime: shiny
-=======
->>>>>>> 11ec302e08f47f318d70db723b2930aa3514d7b5
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-<<<<<<< HEAD
-=======
-
->>>>>>> 11ec302e08f47f318d70db723b2930aa3514d7b5
-```{r load}
+```{r load, echo=FALSE}
 library(tidyverse)
 library(shiny)
 library(dplyr)
 library(here)
 library(yaml)
-<<<<<<< HEAD
 library(trend)
 library(zoo)
 library(Kendall)
 library(tseries)
-=======
->>>>>>> 11ec302e08f47f318d70db723b2930aa3514d7b5
+library(conflicted)
 
 disconnections <- read.csv(here("./NCUC_Disconnection_1996_2022.csv"), 
                            stringsAsFactors = TRUE,
                            header = TRUE)
+disconnections <- disconnections %>% mutate(Date = make_date(
+  month = Month, year = Year))
 ```
 
-```{r select box company}
+```{r select box company, echo=FALSE}
 selectInput(inputId = "company",
             label = h3("Select electric utility"), 
-            choices = list("Duke Power" = "Duke Energy Carolinas", 
-                   "Progress Energy" = "Duke Energy Progress", 
-                   "Dominion North Carolina Power" = "North Carolina Power"), 
+            choices = list("Duke Energy Carolinas" = "Duke Energy Carolinas", 
+                   "Duke Energy Progress" = "Duke Energy Progress", 
+                   "Dominion" = "Dominion",
+                   "New River Light & Power" = "New River Light & Power",
+                   "Nantahala" = "Nantahala"), 
     selected = "N/A")
 
 selectInput(inputId = "month",
@@ -55,34 +45,117 @@ selectInput(inputId = "year",
                            2004, 2003, 2002, 2001, 2000, 1999, 1998, 1997, 1996), 
     selected = "N/A")
 
-renderPrint(paste("Number of disconnections for", input$company))
+#monthly.value <- disconnections %>% select_if()
+#select_if() needs to use a table object
 
-#"select" as first argument
+#monthly.value <- extract(disconnections, disconnections[1] == input$month, disconnections[2] == input$year, disconnections[3] == input$company)
+
+#renderPrint(print("Number of disconnections for", input$company,"is", 
+                  #disconnections[disconnections$Company == input$company,
+                                 #disconnections$Month == input$month,
+                                 #disconnections$Year == input$year]))
+
+#filter data by inputs 
+#how to extract a value from table based on givens
+#specify location of print
+
+#select_if()
 ```
 
-<<<<<<< HEAD
+```{r base plot, echo=FALSE}
+
+year <- 2010
+company <- "Duke Energy Progress"
+
+base.df <- disconnections %>% dplyr::filter(Year == year, Company == company)
+
+base.df$Number_Disconnections_Res <- as.numeric(base.df$Number_Disconnections_Res)
+
+baseplot <- base.df %>% 
+  ggplot(aes(x=factor(Month, levels=1:12, labels=month.abb),y=Number_Disconnections_Res)) +
+  labs(x = "Month", y = "Number of Residential Disconnections") +
+  geom_point()
+  geom_line()
+baseplot
+
+
+```
+
+
+```{r base plot with variable input, echo=FALSE}
+
+disconnections$Number_Disconnections_Res <- as.numeric(disconnections$Number_Disconnections_Res)
+
+baseplot2 <- function(df, year2, company2) {
+  plot2 <- df %>% 
+  dplyr::filter(Year == year2, Company == company2) %>%
+  ggplot(aes(x=factor(Month, levels=1:12, labels=month.abb),
+             y=Number_Disconnections_Res)) + 
+  labs(x = "Month", y = "Number of Residential Disconnections") +
+  geom_point()
+  
+  return(plot2)
+  }
+
+
+# can't seem to convert Number_Disconnection_Res into numeric, error in disconnections object cannot be coerced to type "double"
+
+#series is not periodic or has less than two periods
+
+renderPlot(baseplot2(disconnections, input$year, input$company))
+
+```
+
+
+```{r}
+#yearly.graph.df <- disconnections %>% dplyr::filter(Year == year) %>%
+  #dplyr::filter(Company == company)
+
+```
+
+
 ```{r time series all}
 
-disconnections_ts <- ts(disconnections$Number_Disconnections_Res, 
-                        start=c(1996), frequency=12)
+renderPlot(
+  disconnections.complete <- disconnections %>% 
+  dplyr::filter(Company == input$company)
 
-disconnections_decomp <- stl(disconnections_ts, s.window="periodic")
-plot(disconnections_decomp)
+#na's use zoo package
+#object input not found when using input$year
 
+disconnections.ts <- ts(disconnections.complete$Number_Disconnections_Res, 
+                        start=c(1996, 01, 01), frequency=12)
+
+#COMMA for start
+
+disconnections.decomp <- stl(disconnections.ts, s.window="periodic")
+#series is not periodic or has less than two periods
+plot(disconnections.decomp)
+)
+
+#see time series plot before decomposition
+#potentially to visualize performance across companies (time series or initial month)
+#convert N/As to zeros 
+
+```
+
+```{r time series analysis}
+
+#disconnections.smk <- SeasonalMannKendall(disconnections.ts)
 
 ```
 
 ```{r time series monthly}
-selected_year <- 1996
+#selected_year <- 1996
 
-dominion_subset <- disconnections %>% filter(Company == "North Carolina Power") %>%
-  mutate(Year = 1996)
+#dominion_subset <- disconnections %>% filter(Company == "North Carolina Power") %>%
+  #mutate(Year = 1996)
 
-dominion_subset_ts <- ts(dominion_subset$Number_Disconnections_Res,
-                         start=c(1996), frequency=12)
+#dominion_subset_ts <- ts(dominion_subset$Number_Disconnections_Res,
+                         #start=c(1996), frequency=12)
 
-dominion_decomp <- stl(dominion_subset_ts, s.window="periodic")
-plot(dominion_decomp)
+#dominion_decomp <- stl(dominion_subset_ts, s.window="periodic")
+#plot(dominion_decomp)
 
 ```
 =======
