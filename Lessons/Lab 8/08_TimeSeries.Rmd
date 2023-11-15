@@ -121,7 +121,6 @@ EnoDischarge.late_ts <- ts(EnoDischarge.late$discharge.mean, start = c(1985,1), 
 The `stl` function decomposes the time series object into its component parts. We must specify that the window for seasonal extraction is either "periodic" or a specific number of at least 7. The decomposition proceeds through a loess (locally estimated scatterplot smoothing) function.
 
 ```{r}
-?stl
 # Generate the decomposition
 EnoDischarge.late_Decomposed <- stl(EnoDischarge.late_ts, s.window = "periodic")
 

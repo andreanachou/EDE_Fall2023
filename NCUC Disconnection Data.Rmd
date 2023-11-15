@@ -4,7 +4,7 @@ output: html_document
 date: "2023-10-24"
 runtime: shiny
 ---
-```{r load, echo=FALSE}
+```{r load, include=FALSE}
 library(tidyverse)
 library(shiny)
 library(dplyr)
@@ -19,8 +19,10 @@ library(conflicted)
 disconnections <- read.csv(here("./NCUC_Disconnection_1996_2022.csv"), 
                            stringsAsFactors = TRUE,
                            header = TRUE)
-disconnections <- disconnections %>% mutate(Date = make_date(
-  month = Month, year = Year))
+
+#create a complete Date column, make all N/A's zero
+disconnections <- disconnections %>% 
+  mutate(Date = make_date(month = Month, year = Year)) %>% replace(is.na(.), 0)
 ```
 
 ```{r select box company, echo=FALSE}
@@ -45,21 +47,16 @@ selectInput(inputId = "year",
                            2004, 2003, 2002, 2001, 2000, 1999, 1998, 1997, 1996), 
     selected = "N/A")
 
-#monthly.value <- disconnections %>% select_if()
-#select_if() needs to use a table object
+value <- function(df, company, month, year) {
+  filtered.line <- df %>% 
+    dplyr::filter(Company == company, Month == month, Year == year)
+  
+  return(filtered.line)
+}
 
-#monthly.value <- extract(disconnections, disconnections[1] == input$month, disconnections[2] == input$year, disconnections[3] == input$company)
+renderTable(paste(value(disconnections, input$company, input$month, input$year)))
+#make table horizontal?
 
-#renderPrint(print("Number of disconnections for", input$company,"is", 
-                  #disconnections[disconnections$Company == input$company,
-                                 #disconnections$Month == input$month,
-                                 #disconnections$Year == input$year]))
-
-#filter data by inputs 
-#how to extract a value from table based on givens
-#specify location of print
-
-#select_if()
 ```
 
 ```{r base plot, echo=FALSE}
@@ -71,7 +68,7 @@ base.df <- disconnections %>% dplyr::filter(Year == year, Company == company)
 
 base.df$Number_Disconnections_Res <- as.numeric(base.df$Number_Disconnections_Res)
 
-baseplot <- base.df %>% 
+baseplot <- base.df %>%
   ggplot(aes(x=factor(Month, levels=1:12, labels=month.abb),y=Number_Disconnections_Res)) +
   labs(x = "Month", y = "Number of Residential Disconnections") +
   geom_point()
@@ -81,83 +78,138 @@ baseplot
 
 ```
 
+```{r bar chart}
+
+barchart <- function(df, month, year) {
+  barchartdf <- df %>% dplyr::filter(Year == year & Month == month)
+
+  barchart.plot <- barchartdf %>%
+    ggplot(aes(x=Company, y=Number_Disconnections_Res)) +
+    geom_col() +
+    labs(x ="Company", y ="Number of Residential Disconnections",
+         title=paste("Disconnections for", month,"/",year))
+
+  return(barchart.plot)
+}
+
+renderPlot(barchart(disconnections, input$month, input$year))
+
+#set theme for plots
+#add color to plots
+
+```
 
 ```{r base plot with variable input, echo=FALSE}
 
 disconnections$Number_Disconnections_Res <- as.numeric(disconnections$Number_Disconnections_Res)
 
-baseplot2 <- function(df, year2, company2) {
-  plot2 <- df %>% 
-  dplyr::filter(Year == year2, Company == company2) %>%
+yearlyplot <- function(df, year, company) {
+  yearplot <- df %>% 
+  dplyr::filter(Year == year, Company == company) %>%
   ggplot(aes(x=factor(Month, levels=1:12, labels=month.abb),
              y=Number_Disconnections_Res)) + 
   labs(x = "Month", y = "Number of Residential Disconnections") +
   geom_point()
   
-  return(plot2)
+  return(yearplot)
   }
 
-
-# can't seem to convert Number_Disconnection_Res into numeric, error in disconnections object cannot be coerced to type "double"
-
-#series is not periodic or has less than two periods
-
-renderPlot(baseplot2(disconnections, input$year, input$company))
+renderPlot(yearlyplot(disconnections, input$year, input$company))
 
 ```
 
 
-```{r}
-#yearly.graph.df <- disconnections %>% dplyr::filter(Year == year) %>%
-  #dplyr::filter(Company == company)
+```{r time series plot}
+
+timeseries <- function(df, company) {
+  disconnections.company.ts <- df %>%
+    dplyr::filter(Company == company)
+
+  disconnections.plot.ts <- disconnections.company.ts %>%
+    ggplot(aes(x=Date, y=Number_Disconnections_Res)) +
+    geom_line() +
+    labs(x="Date", y="Number of Residential Disconnections")
+
+  return(disconnections.plot.ts)
+}
+
+renderPlot(timeseries(disconnections, input$company))
+```
+
+```{r pie chart}
+
+# piechart <- function(df, month, year) {
+#   piechartdf <- df %>% 
+#     dplyr::filter(Year == year & Month == month)
+# 
+#   return(piechartdf)
+#   
+#   piechart.disc <- table(piechartdf$Number_Disconnections_Res)
+#   
+#   #return(piechart.disc)
+#   
+#   #piechart.labels <- paste(piechartdf$Company)
+#   
+#   #piechart.plot <- pie(piechart.disc, labels = piechart.labels)
+#   
+#   #return(piechart.plot)
+#   }
 
 ```
 
+```{r time series decomp plot}
 
-```{r time series all}
+timeseriesdecomp <- function(df, company) {
+  disconnections.company.tsdecomp <- df %>%
+    dplyr::filter(Company == company)
+  
+  disconnections.ts <- ts(disconnections.company.tsdecomp$Number_Disconnections_Res,
+                          start=c(1996, 01, 01), frequency=12)
+  
+  disconnections.decomp <- stl(disconnections.ts, s.window="periodic")
+  
+  disconnections.plot.tsdecomp <- plot(disconnections.decomp)
+  
+  return(disconnections.plot.tsdecomp)
+}
 
-renderPlot(
-  disconnections.complete <- disconnections %>% 
-  dplyr::filter(Company == input$company)
+renderPlot(timeseriesdecomp(disconnections, input$company))
 
-#na's use zoo package
-#object input not found when using input$year
-
-disconnections.ts <- ts(disconnections.complete$Number_Disconnections_Res, 
-                        start=c(1996, 01, 01), frequency=12)
-
-#COMMA for start
-
-disconnections.decomp <- stl(disconnections.ts, s.window="periodic")
-#series is not periodic or has less than two periods
-plot(disconnections.decomp)
-)
-
-#see time series plot before decomposition
 #potentially to visualize performance across companies (time series or initial month)
-#convert N/As to zeros 
 
 ```
 
 ```{r time series analysis}
 
-#disconnections.smk <- SeasonalMannKendall(disconnections.ts)
+disconnections.smk <- function(df, company) {
+  disconnections.company.ts <- df %>%
+  dplyr::filter(Company == company)
+  
+  disconnections.ts <- ts(disconnections.company.ts$Number_Disconnections_Res,
+                          start=c(1996, 01, 01), frequency=12)
+  
+  smktrends <- SeasonalMannKendall(disconnections.ts)
+  
+  return(summary(smktrends))
+}
 
+renderPrint(paste("The Seasonal Mann-Kendall test results are",disconnections.smk(disconnections, input$company)))
+
+
+#out of order paste?
 ```
 
-```{r time series monthly}
-#selected_year <- 1996
-
-#dominion_subset <- disconnections %>% filter(Company == "North Carolina Power") %>%
-  #mutate(Year = 1996)
-
-#dominion_subset_ts <- ts(dominion_subset$Number_Disconnections_Res,
-                         #start=c(1996), frequency=12)
-
-#dominion_decomp <- stl(dominion_subset_ts, s.window="periodic")
-#plot(dominion_decomp)
-
+```{r more plots}
+#another time series plot group by year instead of month (sum or average) // methodology for compiling disconnections (repeat customers being disconnected)
+#can also look at yearly dataset by picking month (July) // summer yearly series vs winter yearly series
+#try to interpolate the N/As
+#can compare yearly disconnection values with average temperature for that year in summers and winters 
+#scatterplot comparing two utilities (x=utility 1 disconnections, y=utility 2 disconnections)
+#population or total customer percentages (in new bar chart)
+#facet wrap all utility performances for the year 
+#explore potential inflation effects with number of disconnections
+#explore potential rate change effects with number of disconnections
+#does seasonality actually exist in time series
 ```
+
 =======
-
->>>>>>> 11ec302e08f47f318d70db723b2930aa3514d7b5
