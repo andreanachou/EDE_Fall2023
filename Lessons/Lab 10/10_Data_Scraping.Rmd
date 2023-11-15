@@ -266,6 +266,7 @@ R can iterate using either "lapply" or Purrrs' "map" functions.
 the_years = rep(2018:2020)
 my_facility = '0004-0001'
 
+
 #Use lapply to apply the scrape function
 the_dfs <- lapply(X = the_years,
                   FUN = scrape.it,

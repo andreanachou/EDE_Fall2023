@@ -1,6 +1,6 @@
 ---
 title: "Assignment 10: Data Scraping"
-author: "Student Name"
+author: "Andreana Chou"
 output: pdf_document
 ---
 
@@ -26,6 +26,12 @@ This exercise accompanies the lessons in Environmental Data Analytics on data sc
 ```{r 1. Project Setup, message = FALSE}
 #1 
 
+library(tidyverse)
+library(lubridate)
+library(rvest)
+library(here)
+
+here()
 
 ```
 
@@ -38,6 +44,9 @@ Indicate this website as the as the URL to be scraped. (In other words, read the
 
 ```{r set.the.scraping.website}
 #2 
+
+#used read_html() and copied/pasted the url
+durham.lwsp <- read_html("https://www.ncwater.org/WUDC/app/LWSP/report.php?pwsid=03-32-010&year=2022")
 
 ```
 
@@ -58,6 +67,26 @@ In the code chunk below scrape these values, assigning them to four separate var
 ```{r scrape.the.data}
 #3 
 
+#scrape water system name
+Durham <- durham.lwsp %>% 
+  html_nodes("div+ table tr:nth-child(1) td:nth-child(2)") %>% 
+  html_text()
+
+#scrape PWSID
+durham.pwsid <- durham.lwsp %>% 
+  html_nodes("td tr:nth-child(1) td:nth-child(5)") %>%
+  html_text()
+
+#scrape ownership
+durham.ownership <- durham.lwsp %>%
+  html_nodes("div+ table tr:nth-child(2) td:nth-child(4)") %>%
+  html_text()
+
+#scrape maximum day use per month
+durham.mgd <- durham.lwsp %>%
+  html_nodes("th~ td+ td") %>%
+  html_text()
+
 ```
 
 
@@ -72,7 +101,32 @@ In the code chunk below scrape these values, assigning them to four separate var
 ```{r create.a.dataframe.from.scraped.data}
 #4 
 
+#used data.frame(), set "Month" as a string with the correct order of months,
+#set maximum withdrawals as a numeric data type
+durham.withdrawals <- data.frame("Month" = c("Jan", "May", "Sep", "Feb", "Jun",
+                                             "Oct", "Mar", "Jul", "Nov",
+                                             "Apr", "Aug", "Dec"),
+                                 "Year" = rep(2022, 12),
+                                 "Max_Withdrawals" = as.numeric(durham.mgd))
+
+#mutated columns in data frame to set static attributes as variables, created
+#Date column
+durham.withdrawals <- durham.withdrawals %>% 
+  mutate(City = !!Durham,
+         PWSID = !!durham.pwsid,
+         Ownership = !!durham.ownership,
+         Date = my(paste(Month,"-",Year)))
+
 #5 
+
+#used ggplot() and geom_line() to create line plot of scraped data
+durham.2022.plot <- durham.withdrawals %>% 
+  ggplot(aes(x=Date, y=Max_Withdrawals)) + 
+  geom_line() + 
+  labs(title=paste("Max Monthly Day Use for",Durham,"in 2022"),
+       x = "Month",
+       y = "Withdrawal (MGD)")
+durham.2022.plot
 
 ```
 
@@ -81,7 +135,42 @@ In the code chunk below scrape these values, assigning them to four separate var
 ```{r construct.a.scraping.function}
 #6. 
 
+#used function with two variables: pwsid and year
+scrape.page <- function(url_pwsid, url_year) {
+  #scraping web address construction with paste, and retrieval with read_html
+  scraped.url <- read_html(paste0("https://www.ncwater.org/WUDC/app/LWSP/report.php?pwsid=",
+                                  url_pwsid, "&year=", url_year))
+  
+  #set element address tags as objects
+  scraped.city.tag <- "div+ table tr:nth-child(1) td:nth-child(2)"
+  scraped.pwsid.tag <- "td tr:nth-child(1) td:nth-child(5)"
+  scraped.ownership.tag <- "div+ table tr:nth-child(2) td:nth-child(4)"
+  scraped.mgd.tag <- "th~ td+ td"
 
+  #scrape data items
+  scraped.city <- scraped.url %>% html_nodes(scraped.city.tag) %>% html_text()
+  scraped.pwsid <- scraped.url %>% html_nodes(scraped.pwsid.tag) %>% html_text()
+  scraped.ownership <- scraped.url %>% html_nodes(scraped.ownership.tag) %>%
+    html_text()
+  scraped.mgd <- scraped.url %>% html_nodes(scraped.mgd.tag) %>% html_text()
+  
+  #convert to dataframe
+  scraped.withdrawals <- data.frame("Month" = c("Jan", "May", "Sep", "Feb", "Jun",
+                                             "Oct", "Mar", "Jul", "Nov",
+                                             "Apr", "Aug", "Dec"),
+                                 "Year" = rep(url_year, 12),
+                                 "Max_Withdrawals" = as.numeric(scraped.mgd))
+  
+  scraped.withdrawals <- scraped.withdrawals %>%
+  mutate(City = !!scraped.city,
+         PWSID = !!scraped.pwsid,
+         Ownership = !!scraped.ownership,
+         Date = my(paste(Month,"-",Year)))
+
+  Sys.sleep(2)
+  
+  return(scraped.withdrawals)
+}
 ```
 
 7. Use the function above to extract and plot max daily withdrawals for Durham (PWSID='03-32-010') for each month in 2015
@@ -89,6 +178,17 @@ In the code chunk below scrape these values, assigning them to four separate var
 ```{r fetch.and.plot.Durham.2015.data}
 #7 
 
+#used scrape.page() function to extract Durham values
+durham.2015.withdrawals <- scrape.page("03-32-010", 2015)
+
+#used ggplot() and geom_line() to create line plot
+durham.2015.plot <- durham.2015.withdrawals %>%
+  ggplot(aes(x=Date, y=Max_Withdrawals)) +
+  geom_line() +
+  labs(title=paste("Max Monthly Day Use for",Durham,"in 2015"),
+       x = "Month",
+       y = "Withdrawal (MGD)")
+durham.2015.plot
 
 ```
 
@@ -97,6 +197,22 @@ In the code chunk below scrape these values, assigning them to four separate var
 ```{r fetch.and.plot.Asheville.2015.data}
 #8 
 
+#used scrape.page() function to extract Asheville values
+asheville.2015.withdrawals <- scrape.page("01-11-010", 2015)
+asheville.2015.withdrawals
+
+#combine both Durham and Asheville data with bind_rows
+withdrawals.2015 <- bind_rows(durham.2015.withdrawals, asheville.2015.withdrawals)
+
+#used ggplot() and geom_line() to create line plot of combined datasets, 
+#differentiated between cities by setting color=City under geom_line aesthetics
+withdrawals.2015.plot <- withdrawals.2015 %>%
+  ggplot(aes(x=Date, y=Max_Withdrawals)) +
+  geom_line(aes(color=City)) +
+  labs(title=paste("Max Monthly Day Use for Durham and Asheville in 2015"),
+       x = "Month",
+       y = "Withdrawal (MGD)")
+withdrawals.2015.plot
 
 ```
 
@@ -108,9 +224,30 @@ In the code chunk below scrape these values, assigning them to four separate var
 ```{r fetch.and.plot.Asheville.multiyear.data }
 #9 
 
+#used rep() to sequence the years from 2010 to 2021, and rep.int() to ensure the
+#pwsid numbers are repeated the correct number of times
+asheville_years <- rep(2010:2021)
+asheville_id <- rep.int("01-11-010", length(asheville_years))
+
+#use map2 with the assigned objects in the correct function (scrape.page) order
+asheville.2010.2021.dfs <- map2(asheville_id, asheville_years, scrape.page)
+
+#bind all extracted datasets into one with bind_rows()
+asheville.2010.2021.df <- bind_rows(asheville.2010.2021.dfs)
+asheville.2010.2021.df
+
+#plot all Asheville withdrawals and apply smoothed line with geom_smooth
+asheville.withdrawals.plot <- asheville.2010.2021.df %>%
+  ggplot(aes(x=Date, y=Max_Withdrawals, color=Year)) +
+  geom_line() +
+  geom_smooth(method="loess", se=FALSE) +
+  labs(title=paste("Max Monthly Day Use for Asheville from 2010-2021"),
+       x = "Year",
+       y = "Withdrawal (MGD)")
+asheville.withdrawals.plot
 
 ```
 
 Question: Just by looking at the plot (i.e. not running statistics), does Asheville have a trend in water usage over time?
-> Answer:
+> Answer: Asheville has an upward trend in water usage after 2015. The upward trend may have been skewed by several large peaks around 2019, so running statistical analysis would still be helpful. 
 >
