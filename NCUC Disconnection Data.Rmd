@@ -1,9 +1,12 @@
 ---
-title: "NCUC Disconnection Data"
+title: "North Carolina Electric Utilities - Disconnection Dashboard"
 output: html_document
-date: "2023-10-24"
 runtime: shiny
 ---
+
+## User Selection
+This dashboard contains data on North Carolina electric utility disconnections from the year 1996 to 2022. To find out how many disconnections occurred for a particular utility and time frame, toggle the drop-down boxes below. 
+
 ```{r load, include=FALSE}
 library(tidyverse)
 library(shiny)
@@ -21,8 +24,24 @@ disconnections <- read.csv(here("./NCUC_Disconnection_1996_2022.csv"),
                            header = TRUE)
 
 #create a complete Date column, make all N/A's zero
-disconnections <- disconnections %>% 
+disconnections.zero <- disconnections %>% 
   mutate(Date = make_date(month = Month, year = Year)) %>% replace(is.na(.), 0)
+
+#create interpolated disconnections dataset
+  #interpolation assumption: that all measured values are spatially or temporally related, values closer in space/time will be more similar than those farther
+disconnections.int <- disconnections %>% 
+  mutate(Number_Disconnections_Res = na.approx(Number_Disconnections_Res),
+         Date = make_date(month = Month, year = Year))
+
+#assigned custom theme to my_theme object
+my_theme <- theme_classic(base_size = 12) + 
+  theme(panel.background = element_rect(color = "lightblue", fill = "white"),
+        panel.grid.major = element_line(color = "lightblue", linewidth = 0.5),
+        legend.title = element_text(color = "black", size=10),
+        legend.position = "right")
+
+#set custom theme as default
+theme_set(my_theme)
 ```
 
 ```{r select box company, echo=FALSE}
@@ -51,77 +70,161 @@ value <- function(df, company, month, year) {
   filtered.line <- df %>% 
     dplyr::filter(Company == company, Month == month, Year == year)
   
-  return(filtered.line)
+  return(filtered.line$Number_Disconnections_Res)
 }
 
-renderTable(paste(value(disconnections, input$company, input$month, input$year)))
-#make table horizontal?
+renderPrint(paste("The number of disconnections from",
+                  input$company,"during",input$month,"-",input$year,"is",
+                  value(disconnections.int, input$company, input$month, input$year)))
 
 ```
 
-```{r base plot, echo=FALSE}
+## Graphs - N/A to 0 
 
-year <- 2010
-company <- "Duke Energy Progress"
+This graph depicts the number of disconnections for the selected utility for the entire selected year. The compiled data set lacked disconnection data from utilities for certain months, so these "N/A" entries were converted into "0" for the time being. 
 
-base.df <- disconnections %>% dplyr::filter(Year == year, Company == company)
+```{r base plot zeroes, echo=FALSE}
 
-base.df$Number_Disconnections_Res <- as.numeric(base.df$Number_Disconnections_Res)
+disconnections.zero$Number_Disconnections_Res <- as.numeric(disconnections.zero$Number_Disconnections_Res)
 
-baseplot <- base.df %>%
-  ggplot(aes(x=factor(Month, levels=1:12, labels=month.abb),y=Number_Disconnections_Res)) +
-  labs(x = "Month", y = "Number of Residential Disconnections") +
-  geom_point()
-  geom_line()
-baseplot
-
-
-```
-
-```{r bar chart}
-
-barchart <- function(df, month, year) {
-  barchartdf <- df %>% dplyr::filter(Year == year & Month == month)
-
-  barchart.plot <- barchartdf %>%
-    ggplot(aes(x=Company, y=Number_Disconnections_Res)) +
-    geom_col() +
-    labs(x ="Company", y ="Number of Residential Disconnections",
-         title=paste("Disconnections for", month,"/",year))
-
-  return(barchart.plot)
-}
-
-renderPlot(barchart(disconnections, input$month, input$year))
-
-#set theme for plots
-#add color to plots
-
-```
-
-```{r base plot with variable input, echo=FALSE}
-
-disconnections$Number_Disconnections_Res <- as.numeric(disconnections$Number_Disconnections_Res)
-
-yearlyplot <- function(df, year, company) {
+yearlyplot.zero <- function(df, year, company) {
   yearplot <- df %>% 
   dplyr::filter(Year == year, Company == company) %>%
   ggplot(aes(x=factor(Month, levels=1:12, labels=month.abb),
-             y=Number_Disconnections_Res)) + 
-  labs(x = "Month", y = "Number of Residential Disconnections") +
-  geom_point()
+             y=Number_Disconnections_Res,
+             label=Number_Disconnections_Res)) + 
+  labs(x = "Month", y = "Number of Residential Disconnections",
+       title = paste("Number of Residential Disconnections for",company,"during",
+                     year),
+       subtitle = "N/A's set to zero") +
+  geom_point() +
+  geom_text(vjust=-0.25, hjust=-0.25) +
+  geom_line(group=1)
   
   return(yearplot)
   }
 
-renderPlot(yearlyplot(disconnections, input$year, input$company))
+renderPlot(yearlyplot.zero(disconnections.zero, input$year, input$company))
 
 ```
 
+This graph depicts the number of disconnections across all existing electric utilities for the selected month. The compiled data set lacked disconnection data from utilities for certain months, so these "N/A" entries were converted into "0" for the time being. 
 
-```{r time series plot}
+```{r bar chart zeroes, echo=FALSE}
 
-timeseries <- function(df, company) {
+barchart.zero <- function(df, month, year) {
+  barchartdf <- df %>% dplyr::filter(Year == year & Month == month)
+
+  barchart.plot <- barchartdf %>%
+    ggplot(aes(x=Company, y=Number_Disconnections_Res,
+               label=Number_Disconnections_Res)) +
+    geom_col(aes(fill=Company)) +
+    labs(x ="Company", y ="Number of Residential Disconnections",
+         title = paste("Disconnections for", 
+                       month,"/",year,"across all existing utilities"),
+         subtitle = "N/A's set to zero") +
+    geom_text(vjust=-0.25, hjust=-0.25)
+
+  return(barchart.plot)
+}
+
+renderPlot(barchart.zero(disconnections.zero, input$month, input$year))
+
+```
+
+## Graphs - N/A interpolated
+
+This graph depicts the number of disconnections for the selected utility for the entire selected year. The compiled data set lacked disconnection data from utilities for certain months, so these "N/A" entries were interpolated using na.approx(). 
+
+```{r base plot interpolated, echo=FALSE}
+
+disconnections.int$Number_Disconnections_Res <- as.numeric(disconnections.int$Number_Disconnections_Res)
+
+yearlyplot.int <- function(df, year, company) {
+  yearplot <- df %>% 
+  dplyr::filter(Year == year, Company == company) %>%
+  ggplot(aes(x=factor(Month, levels=1:12, labels=month.abb),
+             y=Number_Disconnections_Res,
+             label=Number_Disconnections_Res)) + 
+  labs(x = "Month", y = "Number of Residential Disconnections", 
+       title = paste("Number of Residential Disconnections for",company,"during",
+                     year),
+       subtitle = "N/A's interpolated") +
+  geom_point() +
+  geom_text(check_overlap = TRUE, vjust=-0.25, hjust=-0.25) +
+  geom_line(group=1, alpha=0.25)
+  
+  return(yearplot)
+  }
+
+renderPlot(yearlyplot.int(disconnections.zero, input$year, input$company))
+
+```
+
+This graph depicts the number of disconnections across all existing electric utilities for the selected month. The compiled data set lacked disconnection data from utilities for certain months, so these "N/A" entries were interpolated using na.approx(). 
+
+```{r bar chart interpolated, echo=FALSE}
+
+barchart.int <- function(df, month, year) {
+  barchartdf <- df %>% dplyr::filter(Year == year & Month == month)
+
+  barchart.plot <- barchartdf %>%
+    ggplot(aes(x=Company, y=Number_Disconnections_Res,
+               label=Number_Disconnections_Res)) +
+    geom_col(aes(fill=Company)) +
+    labs(x ="Company", y ="Number of Residential Disconnections",
+         title = paste("Disconnections for", 
+                     month,"/",year, "across all existing utilities"),
+         subtitle ="N/A's interpolated") +
+    geom_text(vjust=-0.25, hjust=-0.25)
+
+  return(barchart.plot)
+}
+
+renderPlot(barchart.int(disconnections.int, input$month, input$year))
+
+```
+
+```{r facet wrap interpolated, echo=FALSE}
+
+facetplot.int <- function(df, year) {
+  facetwrap.df <- df %>% 
+    dplyr::filter(Year == year)
+ 
+  facetwrap.plot <- facetwrap.df %>%
+    ggplot(aes(x=factor(Month, levels=1:12, labels=month.abb),
+             y=Number_Disconnections_Res,
+             label=Number_Disconnections_Res)) +
+      labs(x = "Month", y = "Number of Residential Disconnections", 
+       title = paste("Number of Residential Disconnections during",year),
+       subtitle = "N/A's interpolated") +
+    geom_point() +
+    geom_text(vjust=-0.1, hjust=-0.25) +
+    facet_wrap(vars(Company)) +
+    geom_line(group=4, alpha=0.2)
+  
+  return(facetwrap.plot)
+}
+
+renderPlot(facetplot.int(disconnections.int, input$year))
+
+```
+
+## Time Series Analysis
+During the COVID-19 pandemic, electric utilities suspended residential energy disconnections, resulting in a period of time (4/2020-12/2021) where utility disconnections were at "0" across all electric utilities. Utilities resumed disconnections in January 2022. The time-series analysis performed below examines pre-pandemic disconnection data for the selected utility. 
+
+## Time Series Analysis - N/A to 0
+
+```{r zeroes pre-pandemic, echo=FALSE}
+
+#cut-off post-pandemic disconnection data (no disconnections rule)
+disconnections.zero.prepan <- disconnections.zero %>%
+  dplyr::filter(Date < as.Date("2020-04-01"))
+```
+
+```{r time series plot zeroes, echo=FALSE}
+
+timeseries.zero <- function(df, company) {
   disconnections.company.ts <- df %>%
     dplyr::filter(Company == company)
 
@@ -133,33 +236,12 @@ timeseries <- function(df, company) {
   return(disconnections.plot.ts)
 }
 
-renderPlot(timeseries(disconnections, input$company))
+renderPlot(timeseries.zero(disconnections.zero.prepan, input$company))
 ```
 
-```{r pie chart}
+```{r time series decomp plot zeroes, echo=FALSE}
 
-# piechart <- function(df, month, year) {
-#   piechartdf <- df %>% 
-#     dplyr::filter(Year == year & Month == month)
-# 
-#   return(piechartdf)
-#   
-#   piechart.disc <- table(piechartdf$Number_Disconnections_Res)
-#   
-#   #return(piechart.disc)
-#   
-#   #piechart.labels <- paste(piechartdf$Company)
-#   
-#   #piechart.plot <- pie(piechart.disc, labels = piechart.labels)
-#   
-#   #return(piechart.plot)
-#   }
-
-```
-
-```{r time series decomp plot}
-
-timeseriesdecomp <- function(df, company) {
+timeseriesdecomp.zero <- function(df, company) {
   disconnections.company.tsdecomp <- df %>%
     dplyr::filter(Company == company)
   
@@ -173,15 +255,15 @@ timeseriesdecomp <- function(df, company) {
   return(disconnections.plot.tsdecomp)
 }
 
-renderPlot(timeseriesdecomp(disconnections, input$company))
+renderPlot(timeseriesdecomp.zero(disconnections.zero.prepan, input$company))
 
 #potentially to visualize performance across companies (time series or initial month)
 
 ```
 
-```{r time series analysis}
+```{r time series analysis smk zeroes, echo=FALSE}
 
-disconnections.smk <- function(df, company) {
+disconnections.smk.zero <- function(df, company) {
   disconnections.company.ts <- df %>%
   dplyr::filter(Company == company)
   
@@ -193,23 +275,386 @@ disconnections.smk <- function(df, company) {
   return(summary(smktrends))
 }
 
-renderPrint(paste("The Seasonal Mann-Kendall test results are",disconnections.smk(disconnections, input$company)))
-
+renderPrint(paste(disconnections.smk.zero(disconnections.zero.prepan,
+                                          input$company),
+                  "The Seasonal Mann-Kendall test results are"))
 
 #out of order paste?
 ```
 
-```{r more plots}
-#another time series plot group by year instead of month (sum or average) // methodology for compiling disconnections (repeat customers being disconnected)
-#can also look at yearly dataset by picking month (July) // summer yearly series vs winter yearly series
-#try to interpolate the N/As
+```{r time series analysis mk zeroes, echo=FALSE}
+
+disconnections.mk.zero <- function(df, company) {
+  disconnections.company.ts <- df %>%
+  dplyr::filter(Company == company)
+  
+  disconnections.ts <- ts(disconnections.company.ts$Number_Disconnections_Res,
+                          start=c(1996, 01, 01), frequency=12)
+  
+  mktrends <- MannKendall(disconnections.ts)
+  
+  return(summary(mktrends))
+}
+
+renderPrint(paste(disconnections.mk.zero(disconnections.zero.prepan,
+                  input$company),
+            "The Mann-Kendall test results are"))
+
+```
+
+## Time Series Analysis - N/A interpolated
+
+```{r interpolated pre-pandemic, echo=FALSE}
+disconnections.int.prepan <- disconnections.int %>%
+  dplyr::filter(Date < as.Date("2020-04-01"))
+```
+
+```{r time series plot int, echo=FALSE}
+
+timeseries.int <- function(df, company) {
+  disconnections.company.ts <- df %>%
+    dplyr::filter(Company == company)
+
+  disconnections.plot.ts <- disconnections.company.ts %>%
+    ggplot(aes(x=Date, y=Number_Disconnections_Res)) +
+    geom_line() +
+    labs(x="Date", y="Number of Residential Disconnections")
+
+  return(disconnections.plot.ts)
+}
+
+renderPlot(timeseries.int(disconnections.int.prepan, input$company))
+```
+
+```{r time series decomp plot int, echo=FALSE}
+
+timeseriesdecomp.int <- function(df, company) {
+  disconnections.company.tsdecomp <- df %>%
+    dplyr::filter(Company == company)
+  
+  disconnections.ts <- ts(disconnections.company.tsdecomp$Number_Disconnections_Res,
+                          start=c(1996, 01, 01), frequency=12)
+  
+  disconnections.decomp <- stl(disconnections.ts, s.window="periodic")
+  
+  disconnections.plot.tsdecomp <- plot(disconnections.decomp)
+  
+  return(disconnections.plot.tsdecomp)
+}
+
+renderPlot(timeseriesdecomp.int(disconnections.int.prepan, input$company))
+```
+
+```{r time series analysis int, echo=FALSE}
+
+disconnections.smk.int <- function(df, company) {
+  disconnections.company.ts <- df %>%
+  dplyr::filter(Company == company)
+  
+  disconnections.ts <- ts(disconnections.company.ts$Number_Disconnections_Res,
+                          start=c(1996, 01, 01), frequency=12)
+  
+  smktrends <- SeasonalMannKendall(disconnections.ts)
+  
+  return(summary(smktrends))
+}
+
+renderPrint(paste(disconnections.smk.int(disconnections.int.prepan, input$company),
+                  "The Seasonal Mann-Kendall test results are"))
+
+#out of order paste?
+```
+
+```{r time series analysis mk int, echo=FALSE}
+
+disconnections.mk.int <- function(df, company) {
+  disconnections.company.ts <- df %>%
+  dplyr::filter(Company == company)
+  
+  disconnections.ts <- ts(disconnections.company.ts$Number_Disconnections_Res,
+                          start=c(1996, 01, 01), frequency=12)
+  
+  mktrends <- MannKendall(disconnections.ts)
+  
+  return(summary(mktrends))
+}
+
+renderPrint(paste(disconnections.mk.int(disconnections.int.prepan, input$company),
+                  "The Mann-Kendall test results are"))
+```
+
+```{r mk test}
+disconnections.test <- disconnections.int.prepan %>%
+  dplyr::filter(Company == "Duke Energy Progress")
+
+disconnections.test <- ts(disconnections.test$Number_Disconnections_Res,
+                          start=c(1996, 01, 01), frequency=12)
+
+test.mktrends <- MannKendall(disconnections.test)
+
+print(test.mktrends)
+```
+
+## Time Series Analysis (Group by Year)
+
+```{r group by year wrangle, echo=FALSE, message=FALSE, warning=FALSE}
+#Group interpolated data set by year and company, summarizing the yearly disconnection values as averages
+disconnections.yearly <- disconnections.int.prepan %>%
+  group_by(Company, Year) %>%
+  dplyr::summarise(Yearly_Average_Disconnections_Res = mean(Number_Disconnections_Res)) %>%
+  mutate(across(Yearly_Average_Disconnections_Res, round, digits=2))
+
+disconnections.yearly <- as.data.frame(disconnections.yearly)
+
+```
+
+```{r yearly test}
+dominion.yearly <- disconnections.yearly %>% dplyr::filter(Company == "Dominion") 
+
+dominion.ts.plot <- dominion.yearly %>%
+  ggplot(aes(x=Year, y=Yearly_Average_Disconnections_Res)) +
+    geom_line(alpha=0.2) +
+    labs(x="Year", y="Number of Residential Disconnections")
+dominion.ts.plot
+
+```
+
+```{r time series yearly, echo = FALSE}
+
+timeseries.yearly <- function(df, company) {
+  disconnections.company.ts <- df %>%
+    dplyr::filter(Company == company)
+  
+  disconnections.plot.ts <- disconnections.company.ts %>%
+    ggplot(aes(x=Year, y=Yearly_Average_Disconnections_Res,
+               label=Yearly_Average_Disconnections_Res)) +
+    geom_line(alpha=0.2) +
+    geom_text(vjust=-0.1, hjust=-0.25) +
+    labs(x="Year", y="Average Number of Residential Disconnections",
+         title=paste(input$company,"Yearly Average Disconnections"))
+
+  return(disconnections.plot.ts)
+}
+
+renderPlot(timeseries.yearly(disconnections.yearly, input$company))
+```
+
+```{r time series yearly Mann-Kendall, echo = FALSE}
+
+disconnections.mk.yearly <- function(df, company) {
+  disconnections.company.ts <- df %>%
+    dplyr::filter(Company == company)
+  
+  disconnections.ts <- ts(disconnections.company.ts$Yearly_Average_Disconnections_Res,
+                          start=c(1996, 01, 01))
+  
+  mktrends <- MannKendall(disconnections.ts)
+  
+  return(summary(mktrends))
+}
+
+renderPrint(paste(disconnections.mk.yearly(disconnections.yearly, input$company),
+                  "The Mann-Kendall test results are"))
+```
+
+## Compare two utilities
+
+This graph compares the yearly performance between two selected utilities for a selected year. The data draws from the data set containing interpolated N/A's. 
+```{r compare two utilities scatterplot, echo=FALSE}
+
+selectInput(inputId = "company1",
+            label = h3("Select first electric utility"), 
+            choices = list("Duke Energy Carolinas" = "Duke Energy Carolinas", 
+                   "Duke Energy Progress" = "Duke Energy Progress", 
+                   "Dominion" = "Dominion",
+                   "New River Light & Power" = "New River Light & Power",
+                   "Nantahala" = "Nantahala"), 
+    selected = "N/A")
+
+selectInput(inputId = "company2",
+            label = h3("Select second electric utility"), 
+            choices = list("Duke Energy Carolinas" = "Duke Energy Carolinas", 
+                   "Duke Energy Progress" = "Duke Energy Progress", 
+                   "Dominion" = "Dominion",
+                   "New River Light & Power" = "New River Light & Power",
+                   "Nantahala" = "Nantahala"), 
+    selected = "N/A")
+
+selectInput(inputId = "year2",
+            label = h3("Select year"), 
+            choices = list(2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014,
+                           2013, 2012, 2011, 2010, 2009, 2008, 2007, 2006, 2005,
+                           2004, 2003, 2002, 2001, 2000, 1999, 1998, 1997, 1996), 
+    selected = "N/A")
+```
+
+```{r scatterplot test}
+compare.test <- disconnections.int %>%
+  dplyr::filter(Year == 2010, 
+                Company %in% c("Duke Energy Progress", 
+                               "Duke Energy Carolinas")) %>%
+  mutate(Company = as.factor(Company))
+
+compare.plot <- compare.test %>%
+  ggplot(aes(x=factor(Month, levels=1:12, labels=month.abb),
+             y=Number_Disconnections_Res,
+             label=Number_Disconnections_Res,
+             group=Company)) + 
+  labs(x = "Month", y = "Number of Residential Disconnections", 
+       title = "Number of Residential Disconnections for") +
+  geom_point(aes(color=Company)) +
+  geom_text(aes(color=Company), vjust=-0.1, hjust=-0.25) +
+  geom_line(aes(group=Company, color=Company), alpha=0.5)
+
+compare.plot
+```
+
+```{r scatterplot comparison}
+
+yearlyplot.compare <- function(df, year2, company1, company2) {
+  yearplot.df <- df %>% 
+  dplyr::filter(Year == year2, Company %in% c(company1, company2)) %>%
+  mutate(Company=as.factor(Company))
+  
+  yearplot <- yearplot.df %>%
+    ggplot(aes(x=factor(Month, levels=1:12, labels=month.abb),
+               y=Number_Disconnections_Res,
+               label=Number_Disconnections_Res,
+               group=Company)) + 
+  labs(x = "Month", y = "Number of Residential Disconnections", 
+       title = paste("Number of Residential Disconnections for",company1,"and",
+       company2,"during",year2),
+       subtitle = "N/A's interpolated") +
+  geom_point(aes(color=Company)) +
+  geom_text(aes(color=Company), vjust=-0.1, hjust=-0.25) +
+  geom_line(aes(group=Company, color=Company), alpha=0.5)
+  
+  return(yearplot)
+  }
+
+renderPlot(yearlyplot.compare(disconnections.int, input$year2, 
+                              input$company1, input$company2))
+```
+
+## Summer and Winter comparisons
+
+Summer scatter plot depicting all disconnections for the selected company for the month of July. 
+```{r summer int}
+
+summer.int <- function(df, company) {
+  summer.int.df <- df %>%
+    dplyr::filter(Company == company, Month == 7)
+  
+  summer.int.plot <- summer.int.df %>%
+    ggplot(aes(x=Year, y=Number_Disconnections_Res,
+               label=Number_Disconnections_Res)) +
+    geom_point() +
+    geom_line(group=1) +
+    geom_text(vjust=-0.25, hjust=-0.25) +
+    labs(x = "Month", y = "Number of Residential Disconnections", 
+         title = paste("July Residential Disconnections for",company),
+         subtitle = "N/A's interpolated")
+  
+  return(summer.int.plot)
+}
+
+renderPlot(summer.int(disconnections.int, input$company))
+
+#try converting "month" into factor
+```
+
+
+Winter scatter plot depicting all disconnections for the selected company for the month of January. 
+```{r winter int}
+
+winter.int <- function(df, company) {
+  winter.int.df <- df %>%
+    dplyr::filter(Company == company, Month == 2)
+  
+  winter.int.plot <- winter.int.df %>%
+    ggplot(aes(x=Year, y=Number_Disconnections_Res,
+               label=Number_Disconnections_Res)) +
+    geom_point() +
+    geom_line(group=1) +
+    geom_text(vjust=-0.25, hjust=-0.25) +
+    labs(x = "Month", y = "Number of Residential Disconnections", 
+         title = paste("January Residential Disconnections for",company),
+         subtitle = "N/A's interpolated")
+  
+  return(winter.int.plot)
+}
+
+renderPlot(winter.int(disconnections.int, input$company))
+```
+
+```{r summer winter combo test}
+seasoncombo.test <- disconnections.int %>%
+  dplyr::filter(Company == "Duke Energy Progress", Month %in% c(2, 7)) %>%
+  mutate(Month = as.factor(Month))
+
+seasoncombo.testplot <- seasoncombo.test %>%
+  ggplot(aes(x=Date, y=Number_Disconnections_Res,
+             label=Number_Disconnections_Res,
+             group=Month)) +
+    geom_point(aes(color=Month)) +
+    geom_line(aes(group=Month, color=Month)) +
+    geom_text(aes(color=Month), vjust=-0.25, hjust=-0.25) +
+    labs(x = "Year", y = "Number of Residential Disconnections", 
+         title = "Seasonal Residential Disconnections for",
+         subtitle = "N/A's interpolated")
+seasoncombo.testplot
+```
+
+```{r summer winter combo int}
+
+seasoncombo.int <- function(df, company) {
+  seasoncombo.int.df <- df %>%
+    dplyr::filter(Company == company, Month %in% c(2, 7)) %>%
+    mutate(Month = as.factor(Month))
+  
+  seasoncombo.int.plot <- seasoncombo.int.df %>%
+    ggplot(aes(x=Date, y=Number_Disconnections_Res,
+               label=Number_Disconnections_Res)) +
+    geom_point(aes(color=Month)) +
+    geom_line(aes(group=Month, color=Month)) +
+    geom_text(aes(color=Month), vjust=-0.25, hjust=-0.25) +
+    labs(x = "Year", y = "Number of Residential Disconnections", 
+         title = paste("Seasonal Residential Disconnections for",company),
+         subtitle = "N/A's interpolated")
+  
+  return(seasoncombo.int.plot)
+}
+
+renderPlot(seasoncombo.int(disconnections.int, input$company))
+```
+
+```{r yearly sum}
+disconnections.nc.yearly <- disconnections.int %>%
+  group_by(Year) %>%
+  mutate(Total_Disconnections = sum(Number_Disconnections_Res),
+         Company = NULL, Number_Disconnections_Res = NULL, Outliers = NULL,
+         Date = NULL, Month = NULL) %>%
+  distinct()
+```
+
+```{r notes}
 #can compare yearly disconnection values with average temperature for that year in summers and winters 
-#scatterplot comparing two utilities (x=utility 1 disconnections, y=utility 2 disconnections)
+  #can try to average data by utility territory 
 #population or total customer percentages (in new bar chart)
-#facet wrap all utility performances for the year 
-#explore potential inflation effects with number of disconnections
+  #not available with cursory search, may need to ask for docket 
+  #or info may not be available
+  #world bank data - by county 
 #explore potential rate change effects with number of disconnections
+  #need to ask for docket #
 #does seasonality actually exist in time series
+
+#make sure to include conclusions in analysis
+#group all disconnections under "NC" and maybe compare population growth, other factors, etc. 
+
+#what would commission like to see from data
+  #ask for additional data (such as customer numbers)
+#automate new data entries (API)
+#next steps 
 ```
 
 =======
