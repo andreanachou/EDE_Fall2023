@@ -9,6 +9,7 @@ library(zoo)
 library(Kendall)
 library(tseries)
 library(conflicted)
+library(rsconnect)
 
 #set theme for plots
 my_theme <- theme_classic(base_size = 12) + 
